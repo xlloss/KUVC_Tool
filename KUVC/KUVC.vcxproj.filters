@@ -1,0 +1,156 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup>
+    <Filter Include="Source Files">
+      <UniqueIdentifier>{4FC737F1-C7A5-4376-A066-2A32D752A2FF}</UniqueIdentifier>
+      <Extensions>cpp;c;cc;cxx;def;odl;idl;hpj;bat;asm;asmx</Extensions>
+    </Filter>
+    <Filter Include="Header Files">
+      <UniqueIdentifier>{93995380-89BD-4b04-88EB-625FBE52EBFB}</UniqueIdentifier>
+      <Extensions>h;hh;hpp;hxx;hm;inl;inc;xsd</Extensions>
+    </Filter>
+    <Filter Include="Resource Files">
+      <UniqueIdentifier>{67DA6AB6-F800-4c08-8B7A-83BB121AAD01}</UniqueIdentifier>
+      <Extensions>rc;ico;cur;bmp;dlg;rc2;rct;bin;rgs;gif;jpg;jpeg;jpe;resx;tiff;tif;png;wav;mfcribbon-ms</Extensions>
+    </Filter>
+    <Filter Include="opencv">
+      <UniqueIdentifier>{dc215d46-6616-41d0-878d-4439b7bfeae0}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="DeviceEnumerator">
+      <UniqueIdentifier>{f4095d49-12e0-4116-a456-bb5343e76d22}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="SerialPort">
+      <UniqueIdentifier>{52d97ae6-322c-4365-adb6-ab6d3cbcfdc6}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="SerialPort\Enumeration">
+      <UniqueIdentifier>{29ba820b-7c42-4a2b-b609-1529f3cbb830}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Lib">
+      <UniqueIdentifier>{8902c7af-d0e8-482e-81eb-beeae318b0e4}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Lib\ExcelControl">
+      <UniqueIdentifier>{541f5562-66c5-4b88-8164-e54335616b0b}</UniqueIdentifier>
+    </Filter>
+  </ItemGroup>
+  <ItemGroup>
+    <Text Include="ReadMe.txt" />
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="OpenCVDeviceEnumerator\DeviceEnumerator.h">
+      <Filter>DeviceEnumerator</Filter>
+    </ClInclude>
+    <ClInclude Include="opencv\OpencvLaplacian.h">
+      <Filter>opencv</Filter>
+    </ClInclude>
+    <ClInclude Include="KUVC.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="KUVCDlg.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="MFVersion.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="stdafx.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="targetver.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="SaveDlg.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="Resource.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="ComPortCombo.h">
+      <Filter>SerialPort\Enumeration</Filter>
+    </ClInclude>
+    <ClInclude Include="EnumDevices.h">
+      <Filter>SerialPort\Enumeration</Filter>
+    </ClInclude>
+    <ClInclude Include="xnBase.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="Lib\ExcelControl\CApplication.h">
+      <Filter>Lib\ExcelControl</Filter>
+    </ClInclude>
+    <ClInclude Include="Lib\ExcelControl\CRange.h">
+      <Filter>Lib\ExcelControl</Filter>
+    </ClInclude>
+    <ClInclude Include="Lib\ExcelControl\CWorkbook.h">
+      <Filter>Lib\ExcelControl</Filter>
+    </ClInclude>
+    <ClInclude Include="Lib\ExcelControl\CWorkbooks.h">
+      <Filter>Lib\ExcelControl</Filter>
+    </ClInclude>
+    <ClInclude Include="Lib\ExcelControl\CWorksheet.h">
+      <Filter>Lib\ExcelControl</Filter>
+    </ClInclude>
+    <ClInclude Include="Lib\ExcelControl\CWorksheets.h">
+      <Filter>Lib\ExcelControl</Filter>
+    </ClInclude>
+    <ClInclude Include="CMsSQL.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="Uvc.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+  </ItemGroup>
+  <ItemGroup>
+    <ClCompile Include="OpenCVDeviceEnumerator\DeviceEnumerator.cpp">
+      <Filter>DeviceEnumerator</Filter>
+    </ClCompile>
+    <ClCompile Include="opencv\OpencvLaplacian.cpp">
+      <Filter>opencv</Filter>
+    </ClCompile>
+    <ClCompile Include="KUVC.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="KUVCDlg.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="SaveDlg.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="stdafx.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="ComPortCombo.cpp">
+      <Filter>SerialPort\Enumeration</Filter>
+    </ClCompile>
+    <ClCompile Include="EnumDevices.cpp">
+      <Filter>SerialPort\Enumeration</Filter>
+    </ClCompile>
+    <ClCompile Include="CMsSQL.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="Uvc.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="res\KUVC.rc2">
+      <Filter>Resource Files</Filter>
+    </None>
+  </ItemGroup>
+  <ItemGroup>
+    <ResourceCompile Include="KUVC.rc">
+      <Filter>Resource Files</Filter>
+    </ResourceCompile>
+  </ItemGroup>
+  <ItemGroup>
+    <Image Include="res\KUVC.ico">
+      <Filter>Resource Files</Filter>
+    </Image>
+    <Image Include="res\Fail.ico">
+      <Filter>Resource Files</Filter>
+    </Image>
+    <Image Include="res\OK.ico">
+      <Filter>Resource Files</Filter>
+    </Image>
+    <Image Include="res\TBC.ico">
+      <Filter>Resource Files</Filter>
+    </Image>
+  </ItemGroup>
+</Project>
