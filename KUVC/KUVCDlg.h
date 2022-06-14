@@ -112,5 +112,5 @@ public:
 	void DebugLog(char *pData, int nLen, bool bHex);
 
 	friend void onMouseFullWnd(int Event, int x, int y, int flags, void* param);
-	afx_msg void OnStnClickedStaticVideoSub5();
+	afx_msg void OnHScroll(UINT nSBCode, UINT nPos, CScrollBar* pScrollBar);
 };

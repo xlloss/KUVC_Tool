@@ -60,8 +60,8 @@ using std::vector;
 #define VIDEO_FULL_WND_NAME "VIDEO FULL"
 #define VIDEO_SCALE_WND_NAME "VIDEO SCALE"
 
-#define USE_UVC_AB003 1
-//#define USE_UVC_DD002 1
+//#define USE_UVC_AB003 1
+#define USE_UVC_DD002 1
 
 #if USE_UVC_AB003
 	#define TEST_CAM_NAME "PC Camera"
@@ -145,6 +145,7 @@ BEGIN_MESSAGE_MAP(CKUVCDlg, CDialogEx)
 	ON_NOTIFY(TCN_SELCHANGE, IDC_TAB_VIDEO_SWITCH, &CKUVCDlg::OnTcnSelchangeTabVideoSwitch)
 	ON_WM_SHOWWINDOW()
 	ON_WM_TIMER()
+	ON_WM_HSCROLL()
 END_MESSAGE_MAP()
 
 void CKUVCDlg::Init()
@@ -726,7 +727,10 @@ DWORD WINAPI CKUVCDlg::CaptureVideoThread(LPVOID lpVoid)
 
 	pThis->LockUIs(TRUE);
 	memset(file_name, 0x00, sizeof(file_name));
-
+	cap.set(cv::CAP_PROP_EXPOSURE, 0);
+	cap.set(cv::CAP_PROP_BRIGHTNESS, -56);
+	cap.set(cv::CAP_PROP_SETTINGS, 1);
+	
 	while (cap.read(inFrame)) {
 		if (pThis->m_bStopCpature == TRUE)
 			break;
@@ -952,8 +956,29 @@ CKUVCDlg* CKUVCDlg::GetInstance()
 	return s_pThis;
 }
 
-
-void CKUVCDlg::OnStnClickedStaticVideoSub5()
+void CKUVCDlg::OnHScroll(UINT nSBCode, UINT nPos, CScrollBar* pScrollBar)
 {
-	// TODO: Add your control notification handler code here
+	// TODO: Add your message handler code here and/or call default
+	int device_num;
+
+	printf("nPos %d\n", nPos);
+	printf("nSBCode %d\n", nSBCode);
+
+//	CButton* m_ctlCheck = (CButton*)this->GetDlgItem(IDC_CHECK_DS);
+//	if (m_ctlCheck->GetCheck() == BST_CHECKED) {
+//		device_num = cv::CAP_DSHOW + this->m_CamId;
+//	}
+//	else {
+//		device_num = this->m_CamId;
+//	}
+//
+//	cv::VideoCapture cap(0 + device_num);
+//	cap.set(cv::CAP_PROP_EXPOSURE, nPos);
+	//if (nSBCode == TB_LINEDOWN)
+	//	MessageBox(_T("TB_LINEDOWN"));
+	//
+	//if (nSBCode == TB_LINEUP)
+	//	MessageBox(_T("TB_LINEUP"));
+
+	CDialogEx::OnHScroll(nSBCode, nPos, pScrollBar);
 }
