@@ -60,8 +60,8 @@ using std::vector;
 #define VIDEO_FULL_WND_NAME "VIDEO FULL"
 #define VIDEO_SCALE_WND_NAME "VIDEO SCALE"
 
-//#define USE_UVC_AB003 1
-#define USE_UVC_DD002 1
+#define USE_UVC_AB003 1
+//#define USE_UVC_DD002 1
 
 #if USE_UVC_AB003
 	#define TEST_CAM_NAME "PC Camera"
@@ -138,7 +138,7 @@ void CKUVCDlg::DoDataExchange(CDataExchange* pDX)
 
 BEGIN_MESSAGE_MAP(CKUVCDlg, CDialogEx)
 	ON_WM_DEVICECHANGE()
-	//ON_MESSAGE(WM_USER_SAVE_PIC, OnSaveData)
+	ON_MESSAGE(WM_USER_SAVE_PIC, OnSaveData)
 	ON_BN_CLICKED(IDCANCEL, &CKUVCDlg::OnBnClickedCancel)
 	ON_CBN_SELCHANGE(IDC_COMBO_UVC_DEVICE, &CKUVCDlg::OnCbnSelchangeVideoDevice)
 	ON_CBN_DROPDOWN(IDC_COMBO_UVC_DEVICE, &CKUVCDlg::OnCbnDropDownVideoDevice)
@@ -628,8 +628,8 @@ LRESULT CKUVCDlg::OnSaveData(WPARAM wParam, LPARAM lParam)
 
 	/*
 	 * 假如 SaveDlg 有抓到 PCB S/N,
-	 *  sdlg.m_cstrPicSaveName會是PCB S/N,
-	 *  否則sdlg.m_cstrPicSaveName會代入時間
+	 * sdlg.m_cstrPicSaveName會是PCB S/N,
+	 * 否則sdlg.m_cstrPicSaveName會代入時間
 	 */
 	cstrPicSaveName = sdlg.m_cstrPicSaveName;
 	if (cstrPicSaveName.IsEmpty() != 0)
@@ -642,22 +642,22 @@ LRESULT CKUVCDlg::OnSaveData(WPARAM wParam, LPARAM lParam)
 	strPath = szPath;
 	nFolderLength = strPath.ReverseFind('\\');
 
-	printf("save excel \r\n");
-	SaveFocusRecordToExcel(sdlg.m_cstrPicSaveName, testResult); //save excel
+	//SaveFocusRecordToExcel(sdlg.m_cstrPicSaveName, testResult); //save excel
+	SaveFocusRecordToExcel(CString("TEST"), testResult); //save excel
 
-	if (m_iSavePic) {
-		//GetLocalTime(&st); //Get system local time
-		strToken.Format(_T("%s\\%s\\%04d%02d%02d"),
-			strPath.Left(nFolderLength),
-			LOG_DIR_STR, st.wYear, st.wMonth, st.wDay);
-
-		if (GetFileAttributes(strToken) == INVALID_FILE_ATTRIBUTES)
-			CreateDirectory(strToken, NULL);
-
-		cstrFileName.Format(L"%s\\%s.jpg", strToken, cstrPicSaveName);
-		std::string strFileName = CT2A(cstrFileName);
-		cv::imwrite(strFileName, m_UvcFrame);
-	}
+	//if (m_iSavePic) {
+	//	//GetLocalTime(&st); //Get system local time
+	//	strToken.Format(_T("%s\\%s\\%04d%02d%02d"),
+	//		strPath.Left(nFolderLength),
+	//		LOG_DIR_STR, st.wYear, st.wMonth, st.wDay);
+	//
+	//	if (GetFileAttributes(strToken) == INVALID_FILE_ATTRIBUTES)
+	//		CreateDirectory(strToken, NULL);
+	//
+	//	cstrFileName.Format(L"%s\\%s.jpg", strToken, cstrPicSaveName);
+	//	std::string strFileName = CT2A(cstrFileName);
+	//	cv::imwrite(strFileName, m_UvcFrame);
+	//}
 
 	return TRUE;
 }
@@ -665,6 +665,7 @@ LRESULT CKUVCDlg::OnSaveData(WPARAM wParam, LPARAM lParam)
 BOOL CKUVCDlg::PreTranslateMessage(MSG* pMsg)
 {
 	#define VK_F 0x46
+	#define VK_S 0x53
 
 	switch (pMsg->message) {
 		case WM_KEYDOWN: {
@@ -674,7 +675,9 @@ BOOL CKUVCDlg::PreTranslateMessage(MSG* pMsg)
 				ShowVideoFullWnd(m_bFullImageMode);
 				ShowVideoScaleWnd(!m_bFullImageMode);
 				break;
-
+			case VK_S:
+				PostMessage(WM_USER_SAVE_PIC, NULL, NULL);
+				break;
 			default:
 				break;
 			}
@@ -890,15 +893,14 @@ void CKUVCDlg::SaveFocusRecordToExcel(CString SerialNumber, int TestResult)
 	//get the execute folder and create "Log" if needed
 	GetModuleFileName(NULL, szPath, MAX_PATH);
 	strPath = szPath;
+
 	nFolderLength = strPath.ReverseFind('\\');
 	strToken.Format(_T("%s\\%s"), strPath.Left(nFolderLength), LOG_DIR_STR);
-
 	if (GetFileAttributes(strToken) == INVALID_FILE_ATTRIBUTES)
 		CreateDirectory(strToken, NULL);
 
-	//saveTime.Format(_T("%d/%d/%d %d:%d:%d"), tm.GetYear(), tm.GetMonth(), tm.GetDay(), tm.GetHour(), tm.GetMinute(), tm.GetSecond());
-	//strTime.Format(_T("%04d/%02d/%02d %02d:%02d:%02d"), st.wYear, st.wMonth, st.wDay, st.wHour, st.wMinute, st.wSecond);
-	//printf("%s \r\n", strTime);
+	strTime.Format(_T("\\%04d_%02d_%02d_%02d_%02d_%02d"), st.wYear, st.wMonth, st.wDay, st.wHour, st.wMinute, st.wSecond);
+
 
 	bFileExists = PathFileExists(cstrFolderPath);
 
@@ -907,10 +909,10 @@ void CKUVCDlg::SaveFocusRecordToExcel(CString SerialNumber, int TestResult)
 	else
 		strResult = L"FAIL";
 
-	pFile = _wfopen(cstrFolderPath, L"a+, ccs= UTF-16LE");
+	_wfopen(strToken, L"a+, ccs= UTF-16LE");
+	_fcloseall();
 
-	//Write data to server
-	//m_bTestMode為0是一般模式,會檢查server資料
+
 }
 
 void CKUVCDlg::DebugLog(char *pData, int nLen, bool bHex)
