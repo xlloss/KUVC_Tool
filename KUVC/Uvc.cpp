@@ -255,7 +255,6 @@ BOOL Uvc::Uvc_Init()
 		wcstombs_s(&returnValue, videoDevName[i], MAX_PATH, m_szFriendlyName, MAX_PATH);
 		/* printf("%d: %s\n", i, videoDevName[i]); */
 
-		//Store the App note firmware (Whose name is *FX3*) device index  
 		if (!(strcmp(videoDevName[i], m_UvcName)))
 			selectedVal = i;
 	}

@@ -60,22 +60,6 @@ using std::vector;
 #define VIDEO_FULL_WND_NAME "VIDEO FULL"
 #define VIDEO_SCALE_WND_NAME "VIDEO SCALE"
 
-#define USE_UVC_AB003 1
-//#define USE_UVC_DD002 1
-
-#if USE_UVC_AB003
-	#define TEST_CAM_NAME "PC Camera"
-	#define ENABLE_DIRECTSHOW 1
-#elif USE_UVC_DD002
-	#define TEST_CAM_NAME "UVC Camera"
-	#define ENABLE_DIRECTSHOW 0
-	#define TEST_UVC_XU 1
-#else
-	#define TEST_CAM_NAME "PC Camera"
-	#define ENABLE_DIRECTSHOW 1
-#endif
-
-
 #define VIDEO_FULL_W 3840
 #define VIDEO_FULL_H 2160
 
@@ -113,21 +97,7 @@ CKUVCDlg::CKUVCDlg(CWnd* pParent /*=NULL*/)
 
 CKUVCDlg::~CKUVCDlg()
 {
-	AfxGetApp()->WriteProfileInt(_T("Setting"), _T("SavePic"), m_iSavePic);
 
-	m_pFullWndCtrls.RemoveAll(); //Full tab items release
-	m_pStaticWndCtrls.RemoveAll(); //Static tab items release
-
-	m_pVideoDeviceComboCtrls.RemoveAll();
-	m_MatFullFrame.release();
-	m_MatFullScaleFrame.release();
-	ReleaseCaptureEvent();
-	CloseCaptureProcedure();
-
-	if (m_hCaptured) {
-		CloseHandle(m_hCaptured);
-		m_hCaptured = NULL;
-	}
 }
 
 void CKUVCDlg::DoDataExchange(CDataExchange* pDX)
@@ -146,6 +116,7 @@ BEGIN_MESSAGE_MAP(CKUVCDlg, CDialogEx)
 	ON_WM_SHOWWINDOW()
 	ON_WM_TIMER()
 	ON_WM_HSCROLL()
+	ON_WM_CLOSE()
 END_MESSAGE_MAP()
 
 void CKUVCDlg::Init()
@@ -234,6 +205,57 @@ BOOL CKUVCDlg::OnInitDialog()
 	ShowVideoFullWnd(FALSE);
 	ShowVideoScaleWnd(TRUE);
 
+	//ReCheck button
+
+
+	m_TestBtn[0] = new CButton();
+	//m_TestBtnRect[0].
+	
+
+	//m_TestBtn[0]->Create(L"ReCheck",
+	//	WS_VISIBLE | WS_CHILD | BS_PUSHBUTTON,
+	//	ReCkBtn_rect, this, IDC_PUSHBTN);
+	//GetDlgItem(IDC_PUSHBTN)->EnableWindow(false);
+
+
+	CFont* m_font = new CFont();
+
+	m_font->CreatePointFont(200, L" ");
+	GetDlgItem(IDC_CHECK_DS)->SetWindowPos(NULL, DIRECTSHOW_CKB_X, DIRECTSHOW_CKB_Y, 
+	DIRECTSHOW_CKB_W, DIRECTSHOW_CKB_H, SWP_NOZORDER);
+
+	CStatic* m_Ig1600TextCtl = new CStatic();
+	m_Ig1600TextCtl->Create(_T("IG1600 ID :"), WS_CHILD | WS_VISIBLE | SS_LEFT,
+		CRect(TEX_IG1600_X, TEX_IG1600_Y, TEX_IG1600_W, TEX_IG1600_H), this);
+	m_Ig1600TextCtl->SetFont(m_font);
+
+	CStatic* m_ImageSensorTextCtl = new CStatic();
+	m_ImageSensorTextCtl->Create(_T("Sensor ID :"), WS_CHILD | WS_VISIBLE | SS_LEFT,
+		CRect(TEX_IMGSEN_X, TEX_IMGSEN_Y, TEX_IMGSEN_W, TEX_IMGSEN_H), this);
+	m_ImageSensorTextCtl->SetFont(m_font);
+
+	CStatic* m_LedTextCtl = new CStatic();
+	m_LedTextCtl->Create(_T("LED Ctrl :"), WS_CHILD | WS_VISIBLE | SS_LEFT,
+		CRect(TEX_LED_X, TEX_LED_Y, TEX_LED_W, TEX_LED_H), this);
+	m_LedTextCtl->SetFont(m_font);
+
+	CStatic* m_LightTextCtl = new CStatic();
+	m_LightTextCtl->Create(_T("Light Ctrl :"), WS_CHILD | WS_VISIBLE | SS_LEFT,
+		CRect(TEX_LIGHT_X, TEX_LIGHT_Y, TEX_LIGHT_W, TEX_LIGHT_H), this);
+	m_LightTextCtl->SetFont(m_font);
+
+	CStatic* m_AfBtnTextCtl = new CStatic();
+	m_AfBtnTextCtl->Create(_T("AF Btn Status :"), WS_CHILD | WS_VISIBLE | SS_LEFT,
+		CRect(BTN_AF_X, BTN_AF_Y, BTN_AF_W, BTN_AF_H), this);
+	m_AfBtnTextCtl->SetFont(m_font);
+
+
+	CStatic* m_LightBtnTextCtl = new CStatic();
+	m_LightBtnTextCtl->Create(_T("Light Btn Status :"), WS_CHILD | WS_VISIBLE | SS_LEFT,
+		CRect(BTN_LIGHT_X, BTN_LIGHT_Y, BTN_LIGHT_W, BTN_LIGHT_H), this);
+
+	m_LightBtnTextCtl->SetFont(m_font);
+
 	//video device list
 	DeviceEnumerator dec_emu;
 	std::map<int, Device> usbcam_devices = dec_emu.getVideoDevicesMap();
@@ -256,19 +278,7 @@ BOOL CKUVCDlg::OnInitDialog()
 	}
 	m_pVideoDeviceComboCtrls.Add(pComboBox);
 	m_CamId = pComboBox->GetCurSel();
-	CreateCaptureProcedure();
-
 	
-	
-	//ReCheck button
-	//CButton *ReChkButton;
-	//ReChkButton = new CButton;
-	//ReCkBtn_rect.SetRect(1600, 5, 1750, 30);
-	//ReChkButton->Create(L"ReCheck",
-	//	WS_VISIBLE | WS_CHILD | BS_PUSHBUTTON,
-	//	ReCkBtn_rect, this, IDC_PUSHBTN);
-	//GetDlgItem(IDC_PUSHBTN)->EnableWindow(false);
-
 	// tab ctrl
 	m_TabCtrl.MoveWindow(0, 0, 1920, 1080);
 	m_TabCtrl.SetMinTabWidth(50);
@@ -302,47 +312,6 @@ BOOL CKUVCDlg::OnInitDialog()
 	if (ConnectToServer() == FALSE)
 		return FALSE;
 #endif
-	CFont *m_font = new CFont();
-	
-	m_font->CreatePointFont(200, L"IG1600 ID :");
-
-	GetDlgItem(IDC_CHECK_DS)->SetWindowPos(NULL, 1000, 30, 1000 + 10, 30 + 20, SWP_NOZORDER);
-	GetDlgItem(IDC_CHECK_DS)->SetFont(m_font);
-	
-	CStatic *m_Ig1600TextCtl = new CStatic();
-	m_Ig1600TextCtl->Create(_T("IG1600 ID :"), WS_CHILD | WS_VISIBLE | SS_LEFT,
-		CRect(700, 50, 700 + 140, 50 + 40), this);
-	m_Ig1600TextCtl->SetFont(m_font);
-
-	CStatic* m_ImageSensorTextCtl = new CStatic();
-	m_ImageSensorTextCtl->Create(_T("Sensor ID :"), WS_CHILD | WS_VISIBLE | SS_LEFT,
-		CRect(700, 50 + 50, 700 + 140, 50 + 40 + 50), this);
-	m_ImageSensorTextCtl->SetFont(m_font);
-
-	CStatic* m_LedTextCtl = new CStatic();
-	m_LedTextCtl->Create(_T("LED Ctrl :"), WS_CHILD | WS_VISIBLE | SS_LEFT,
-		CRect(700, 50 + 100, 700 + 140, 50 + 40 + 100), this);
-	m_LedTextCtl->SetFont(m_font);
-
-
-	CStatic* m_LightTextCtl = new CStatic();
-	m_LightTextCtl->Create(_T("Light Ctrl :"), WS_CHILD | WS_VISIBLE | SS_LEFT,
-		CRect(700, 50 + 150, 700 + 140, 50 + 40 + 150), this);
-	m_LightTextCtl->SetFont(m_font);
-
-	CStatic* m_AfBtnTextCtl = new CStatic();
-	m_AfBtnTextCtl->Create(_T("AF Btn Status :"), WS_CHILD | WS_VISIBLE | SS_LEFT,
-		CRect(700, 50 + 200, 700 + 200, 50 + 40 + 200), this);
-	m_AfBtnTextCtl->SetFont(m_font);
-
-
-	CStatic* m_LightBtnTextCtl = new CStatic();
-	m_LightBtnTextCtl->Create(_T("Light Btn Status :"), WS_CHILD | WS_VISIBLE | SS_LEFT,
-		CRect(700, 50 + 250, 700 + 200, 50 + 40 + 250), this);
-
-	m_LightBtnTextCtl->SetFont(m_font);
-
-
 	
 #if defined (TEST_UVC_XU) && defined (USE_UVC_DD002)
 	/* Test UVC XU */
@@ -368,8 +337,29 @@ BOOL CKUVCDlg::OnInitDialog()
 
 	UvcCtl->Uvc_Close();
 	delete UvcCtl;
-#endif
+#else
+	/* Test UVC XU */
+	UvcCtl = new Uvc();
+	UvcCtl->Set_DevName(TEST_CAM_NAME);
+	UvcCtl->Uvc_Init();
+	
+	static const GUID UVC_xuGuid =
+	{ 0x0FB885C3, 0x68C2, 0x4547, {0x90, 0xF7, 0x8F, 0x47, 0x57, 0x9D, 0x95, 0xFC }};
+	
+	#define XU_LED_CMD 0x03
+	//BYTE read_data[3];
+	BYTE write_data[1] = { 0x01 };
+	unsigned int datalen;
+	
+	datalen = sizeof(write_data) / sizeof(write_data[0]);
+	
+	UvcCtl->WriteXu(UVC_xuGuid, XU_LED_CMD, write_data, datalen);
+	
+	UvcCtl->Uvc_Close();
+	delete UvcCtl;
 
+#endif
+	CreateCaptureProcedure();
 	/* return TRUE, unless you set the focus to a control */
 	return TRUE;
 }
@@ -983,4 +973,43 @@ void CKUVCDlg::OnHScroll(UINT nSBCode, UINT nPos, CScrollBar* pScrollBar)
 	//	MessageBox(_T("TB_LINEUP"));
 
 	CDialogEx::OnHScroll(nSBCode, nPos, pScrollBar);
+}
+
+
+void CKUVCDlg::OnClose()
+{
+	int retry = 10;
+	int ret;
+	AfxMessageBox(_T("Close Camera!"));
+	AfxGetApp()->WriteProfileInt(_T("Setting"), _T("SavePic"), m_iSavePic);
+
+	m_pFullWndCtrls.RemoveAll(); //Full tab items release
+	m_pStaticWndCtrls.RemoveAll(); //Static tab items release
+
+	m_pVideoDeviceComboCtrls.RemoveAll();
+	m_MatFullFrame.release();
+	m_MatFullScaleFrame.release();
+	ReleaseCaptureEvent();
+
+	m_bStopCpature = TRUE;
+	do {
+		retry--;
+		if (retry < 0) {
+			AfxMessageBox(_T("Close Camera Timeout!"));
+			break;
+		}
+		Sleep(10);
+		ret = CloseCaptureProcedure();
+	} while (ret == FALSE);
+
+	Sleep(500);
+	m_hCapturing = NULL;
+	m_bFindCam = FALSE;
+
+	if (m_hCaptured) {
+		CloseHandle(m_hCaptured);
+		m_hCaptured = NULL;
+	}
+
+	CDialogEx::OnClose();
 }
