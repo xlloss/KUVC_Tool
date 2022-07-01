@@ -209,6 +209,9 @@ BOOL Uvc::ReadXu(GUID xuGuid, unsigned int xu_cmd, BYTE *data, unsigned int data
 		return FALSE;
 	}
 
+	//printf("xu_data[0] 0x%x\n", xu_data[0]);
+	//printf("xu_data[1] 0x%x\n", xu_data[1]);
+	//printf("readCount %d\n", readCount);
 	/* printf("Found UVC extension unit\n"); */
 	/* printf("\nSend Device LED command\r\n"); */
 

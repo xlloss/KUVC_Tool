@@ -117,6 +117,7 @@ BEGIN_MESSAGE_MAP(CKUVCDlg, CDialogEx)
 	ON_WM_TIMER()
 	ON_WM_HSCROLL()
 	ON_WM_CLOSE()
+	ON_BN_CLICKED(IDC_BUTTON_XU, &CKUVCDlg::OnClickedButtonXu)
 END_MESSAGE_MAP()
 
 void CKUVCDlg::Init()
@@ -206,16 +207,7 @@ BOOL CKUVCDlg::OnInitDialog()
 	ShowVideoScaleWnd(TRUE);
 
 	//ReCheck button
-
-
-	m_TestBtn[0] = new CButton();
-	//m_TestBtnRect[0].
-	
-
-	//m_TestBtn[0]->Create(L"ReCheck",
-	//	WS_VISIBLE | WS_CHILD | BS_PUSHBUTTON,
-	//	ReCkBtn_rect, this, IDC_PUSHBTN);
-	//GetDlgItem(IDC_PUSHBTN)->EnableWindow(false);
+	GetDlgItem(IDC_BUTTON_XU)->SetWindowPos(NULL, 0, 600, 100, 30, SWP_NOZORDER);
 
 
 	CFont* m_font = new CFont();
@@ -229,10 +221,22 @@ BOOL CKUVCDlg::OnInitDialog()
 		CRect(TEX_IG1600_X, TEX_IG1600_Y, TEX_IG1600_W, TEX_IG1600_H), this);
 	m_Ig1600TextCtl->SetFont(m_font);
 
+	m_Ig1600ID = new CStatic();
+	m_Ig1600ID->Create(_T("TEST ID"), WS_CHILD | WS_VISIBLE | SS_LEFT,
+		CRect(TEX_IG1600_X + 130, TEX_IG1600_Y, TEX_IG1600_W + 200, TEX_IG1600_H), this);
+	m_Ig1600ID->SetFont(m_font);
+
+
 	CStatic* m_ImageSensorTextCtl = new CStatic();
 	m_ImageSensorTextCtl->Create(_T("Sensor ID :"), WS_CHILD | WS_VISIBLE | SS_LEFT,
 		CRect(TEX_IMGSEN_X, TEX_IMGSEN_Y, TEX_IMGSEN_W, TEX_IMGSEN_H), this);
 	m_ImageSensorTextCtl->SetFont(m_font);
+
+	m_ImageSensorID = new CStatic();
+	m_ImageSensorID->Create(_T("TEST ID"), WS_CHILD | WS_VISIBLE | SS_LEFT,
+		CRect(TEX_IMGSEN_X + 130, TEX_IMGSEN_Y, TEX_IMGSEN_W + 200, TEX_IMGSEN_H), this);
+	m_ImageSensorID->SetFont(m_font);
+
 
 	CStatic* m_LedTextCtl = new CStatic();
 	m_LedTextCtl->Create(_T("LED Ctrl :"), WS_CHILD | WS_VISIBLE | SS_LEFT,
@@ -312,54 +316,9 @@ BOOL CKUVCDlg::OnInitDialog()
 	if (ConnectToServer() == FALSE)
 		return FALSE;
 #endif
-	
-#if defined (TEST_UVC_XU) && defined (USE_UVC_DD002)
-	/* Test UVC XU */
-	UvcCtl = new Uvc();
-	UvcCtl->Set_DevName(TEST_CAM_NAME);
-	UvcCtl->Uvc_Init();
 
-	static const GUID UVC_xuGuid =
-		{0xE307E649, 0x4618, 0xA3FF, {0x82, 0xFC, 0x2D, 0x8B, 0x5F, 0x21, 0x67, 0x73}};
-
-	#define XU_LED_CMD 0x01
-	BYTE read_data[3];
-	BYTE write_data[3] = {65, 60, 1};
-	unsigned int datalen;
-
-	datalen = sizeof(write_data) / sizeof(write_data[0]);
-
-	UvcCtl->WriteXu(UVC_xuGuid, XU_LED_CMD, write_data, datalen);
-
-	UvcCtl->ReadXu(UVC_xuGuid, XU_LED_CMD, read_data, datalen);
-	for (int i = 0; i < datalen; i++)
-		printf("read_data[%d] 0x%x\n", i, read_data[i]);
-
-	UvcCtl->Uvc_Close();
-	delete UvcCtl;
-#else
-	/* Test UVC XU */
-	UvcCtl = new Uvc();
-	UvcCtl->Set_DevName(TEST_CAM_NAME);
-	UvcCtl->Uvc_Init();
-	
-	static const GUID UVC_xuGuid =
-	{ 0x0FB885C3, 0x68C2, 0x4547, {0x90, 0xF7, 0x8F, 0x47, 0x57, 0x9D, 0x95, 0xFC }};
-	
-	#define XU_LED_CMD 0x03
-	//BYTE read_data[3];
-	BYTE write_data[1] = { 0x01 };
-	unsigned int datalen;
-	
-	datalen = sizeof(write_data) / sizeof(write_data[0]);
-	
-	UvcCtl->WriteXu(UVC_xuGuid, XU_LED_CMD, write_data, datalen);
-	
-	UvcCtl->Uvc_Close();
-	delete UvcCtl;
-
-#endif
 	CreateCaptureProcedure();
+
 	/* return TRUE, unless you set the focus to a control */
 	return TRUE;
 }
@@ -1012,4 +971,46 @@ void CKUVCDlg::OnClose()
 	}
 
 	CDialogEx::OnClose();
+}
+
+
+void CKUVCDlg::OnClickedButtonXu()
+{
+	//AfxMessageBox(_T("XuTest"));
+	/* Test UVC XU */
+	UvcCtl = new Uvc();
+	UvcCtl->Set_DevName(TEST_CAM_NAME);
+	UvcCtl->Uvc_Init();
+	
+	static const GUID UVC_xuGuid =
+	{ 0x0FB885C3, 0x68C2, 0x4547, {0x90, 0xF7, 0x8F, 0x47, 0x57, 0x9D, 0x95, 0xFC }};
+	
+	#define XU_LED_CMD 0x03
+	#define XU_SENSOR_ID_CMD 0x05
+	#define XU_IG1600_ID_CMD 0x06
+
+	BYTE read_data[4] = {0x00};
+	BYTE write_data[1] = { 0x01 };
+	unsigned int datalen;
+	char testme[10];
+
+	datalen = sizeof(write_data) / sizeof(write_data[0]);
+	UvcCtl->WriteXu(UVC_xuGuid, XU_LED_CMD, write_data, datalen);
+
+	/* sensor ID */
+	datalen = 2;
+	UvcCtl->ReadXu(UVC_xuGuid, XU_SENSOR_ID_CMD, read_data, datalen);
+	sprintf(testme, "%x%x", read_data[0], read_data[1]);
+	CA2T str_sensor_id(testme);
+	m_ImageSensorID->SetWindowTextW(str_sensor_id);
+
+	/* IG1600 ID */
+	datalen = 4;
+	UvcCtl->ReadXu(UVC_xuGuid, XU_IG1600_ID_CMD, read_data, datalen);
+	sprintf(testme, "%x%x%x%x", read_data[0], read_data[1], read_data[2], read_data[3]);
+	CA2T str_ig1600_id(testme);
+	m_Ig1600ID->SetWindowTextW(str_ig1600_id);
+
+	UvcCtl->Uvc_Close();
+	delete UvcCtl;
 }

@@ -130,6 +130,9 @@ protected:
 	CButton *m_TestBtn[6];
 	RECT m_TestBtnRect[6];
 
+	CStatic* m_ImageSensorID;
+	CStatic* m_Ig1600ID;
+
 	// Generated message map functions
 	virtual BOOL OnInitDialog();
 	virtual void DoDataExchange(CDataExchange* pDX);	// DDX/DDV support
@@ -170,4 +173,5 @@ public:
 	friend void onMouseFullWnd(int Event, int x, int y, int flags, void* param);
 	afx_msg void OnHScroll(UINT nSBCode, UINT nPos, CScrollBar* pScrollBar);
 	afx_msg void OnClose();
+	afx_msg void OnClickedButtonXu();
 };
