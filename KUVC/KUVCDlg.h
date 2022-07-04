@@ -46,7 +46,7 @@
 
 #define CTL_OFFSET_Y 50
 
-#define TEX_IG1600_X 1000
+#define TEX_IG1600_X 800
 #define TEX_IG1600_Y 200
 #define TEX_IG1600_W TEX_IG1600_X + 140
 #define TEX_IG1600_H TEX_IG1600_Y + 50
@@ -132,6 +132,10 @@ protected:
 
 	CStatic* m_ImageSensorID;
 	CStatic* m_Ig1600ID;
+	CStatic* m_LightLedCtl;
+	CStatic* m_PreLedCtl;
+	CStatic* m_AfBtn;
+	CStatic* m_LedBtn;
 
 	// Generated message map functions
 	virtual BOOL OnInitDialog();
@@ -171,7 +175,6 @@ public:
 	void DebugLog(char *pData, int nLen, bool bHex);
 
 	friend void onMouseFullWnd(int Event, int x, int y, int flags, void* param);
-	afx_msg void OnHScroll(UINT nSBCode, UINT nPos, CScrollBar* pScrollBar);
 	afx_msg void OnClose();
 	afx_msg void OnClickedButtonXu();
 };

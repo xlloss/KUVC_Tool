@@ -174,6 +174,7 @@ BOOL CKUVCDlg::OnInitDialog()
 	CButton *SavPic_ChkBox;
 	CA2T str_tmp(TEST_CAM_NAME);
 	int ret;
+	#define TEXT_DEF "N/A"
 
 	CDialogEx::OnInitDialog();
 
@@ -206,9 +207,8 @@ BOOL CKUVCDlg::OnInitDialog()
 	ShowVideoFullWnd(FALSE);
 	ShowVideoScaleWnd(TRUE);
 
-	//ReCheck button
+	//xu test button
 	GetDlgItem(IDC_BUTTON_XU)->SetWindowPos(NULL, 0, 600, 100, 30, SWP_NOZORDER);
-
 
 	CFont* m_font = new CFont();
 
@@ -216,49 +216,70 @@ BOOL CKUVCDlg::OnInitDialog()
 	GetDlgItem(IDC_CHECK_DS)->SetWindowPos(NULL, DIRECTSHOW_CKB_X, DIRECTSHOW_CKB_Y, 
 	DIRECTSHOW_CKB_W, DIRECTSHOW_CKB_H, SWP_NOZORDER);
 
+	/* IG ID */
 	CStatic* m_Ig1600TextCtl = new CStatic();
 	m_Ig1600TextCtl->Create(_T("IG1600 ID :"), WS_CHILD | WS_VISIBLE | SS_LEFT,
 		CRect(TEX_IG1600_X, TEX_IG1600_Y, TEX_IG1600_W, TEX_IG1600_H), this);
 	m_Ig1600TextCtl->SetFont(m_font);
 
 	m_Ig1600ID = new CStatic();
-	m_Ig1600ID->Create(_T("TEST ID"), WS_CHILD | WS_VISIBLE | SS_LEFT,
+	m_Ig1600ID->Create(_T(TEXT_DEF), WS_CHILD | WS_VISIBLE | SS_LEFT,
 		CRect(TEX_IG1600_X + 130, TEX_IG1600_Y, TEX_IG1600_W + 200, TEX_IG1600_H), this);
 	m_Ig1600ID->SetFont(m_font);
 
 
+	/* Sensor ID */
 	CStatic* m_ImageSensorTextCtl = new CStatic();
 	m_ImageSensorTextCtl->Create(_T("Sensor ID :"), WS_CHILD | WS_VISIBLE | SS_LEFT,
 		CRect(TEX_IMGSEN_X, TEX_IMGSEN_Y, TEX_IMGSEN_W, TEX_IMGSEN_H), this);
 	m_ImageSensorTextCtl->SetFont(m_font);
 
 	m_ImageSensorID = new CStatic();
-	m_ImageSensorID->Create(_T("TEST ID"), WS_CHILD | WS_VISIBLE | SS_LEFT,
+	m_ImageSensorID->Create(_T(TEXT_DEF), WS_CHILD | WS_VISIBLE | SS_LEFT,
 		CRect(TEX_IMGSEN_X + 130, TEX_IMGSEN_Y, TEX_IMGSEN_W + 200, TEX_IMGSEN_H), this);
 	m_ImageSensorID->SetFont(m_font);
 
-
+	/* Light LED */
 	CStatic* m_LedTextCtl = new CStatic();
-	m_LedTextCtl->Create(_T("LED Ctrl :"), WS_CHILD | WS_VISIBLE | SS_LEFT,
+	m_LedTextCtl->Create(_T("LLED :"), WS_CHILD | WS_VISIBLE | SS_LEFT,
 		CRect(TEX_LED_X, TEX_LED_Y, TEX_LED_W, TEX_LED_H), this);
 	m_LedTextCtl->SetFont(m_font);
 
+	m_LightLedCtl = new CStatic();
+	m_LightLedCtl->Create(_T(TEXT_DEF), WS_CHILD | WS_VISIBLE | SS_LEFT,
+		CRect(TEX_LED_X + 130, TEX_LED_Y, TEX_LED_W + 200, TEX_LED_H), this);
+	m_LightLedCtl->SetFont(m_font);
+
+	/* PreView LED */
 	CStatic* m_LightTextCtl = new CStatic();
-	m_LightTextCtl->Create(_T("Light Ctrl :"), WS_CHILD | WS_VISIBLE | SS_LEFT,
+	m_LightTextCtl->Create(_T("PLED :"), WS_CHILD | WS_VISIBLE | SS_LEFT,
 		CRect(TEX_LIGHT_X, TEX_LIGHT_Y, TEX_LIGHT_W, TEX_LIGHT_H), this);
 	m_LightTextCtl->SetFont(m_font);
 
+	m_PreLedCtl = new CStatic();
+	m_PreLedCtl->Create(_T(TEXT_DEF), WS_CHILD | WS_VISIBLE | SS_LEFT,
+		CRect(TEX_LIGHT_X + 130, TEX_LIGHT_Y, TEX_LIGHT_W + 200, TEX_LIGHT_H), this);
+	m_PreLedCtl->SetFont(m_font);
+
+	/* AF Btn */
 	CStatic* m_AfBtnTextCtl = new CStatic();
-	m_AfBtnTextCtl->Create(_T("AF Btn Status :"), WS_CHILD | WS_VISIBLE | SS_LEFT,
+	m_AfBtnTextCtl->Create(_T("AF Btn :"), WS_CHILD | WS_VISIBLE | SS_LEFT,
 		CRect(BTN_AF_X, BTN_AF_Y, BTN_AF_W, BTN_AF_H), this);
 	m_AfBtnTextCtl->SetFont(m_font);
+	m_AfBtn = new CStatic();
+	m_AfBtn->Create(_T(TEXT_DEF), WS_CHILD | WS_VISIBLE | SS_LEFT,
+		CRect(BTN_AF_X + 150, BTN_AF_Y, BTN_AF_W + 200, BTN_AF_H), this);
+	m_AfBtn->SetFont(m_font);
 
 
 	CStatic* m_LightBtnTextCtl = new CStatic();
-	m_LightBtnTextCtl->Create(_T("Light Btn Status :"), WS_CHILD | WS_VISIBLE | SS_LEFT,
+	m_LightBtnTextCtl->Create(_T("Light Btn :"), WS_CHILD | WS_VISIBLE | SS_LEFT,
 		CRect(BTN_LIGHT_X, BTN_LIGHT_Y, BTN_LIGHT_W, BTN_LIGHT_H), this);
-
 	m_LightBtnTextCtl->SetFont(m_font);
+	m_LedBtn = new CStatic();
+	m_LedBtn->Create(_T(TEXT_DEF), WS_CHILD | WS_VISIBLE | SS_LEFT,
+		CRect(BTN_LIGHT_X + 150, BTN_LIGHT_Y, BTN_LIGHT_W + 200, BTN_LIGHT_H), this);
+	m_LedBtn->SetFont(m_font);
 
 	//video device list
 	DeviceEnumerator dec_emu;
@@ -679,9 +700,10 @@ DWORD WINAPI CKUVCDlg::CaptureVideoThread(LPVOID lpVoid)
 
 	pThis->LockUIs(TRUE);
 	memset(file_name, 0x00, sizeof(file_name));
-	cap.set(cv::CAP_PROP_EXPOSURE, 0);
-	cap.set(cv::CAP_PROP_BRIGHTNESS, -56);
+	//cap.set(cv::CAP_PROP_EXPOSURE, 0);
+	//cap.set(cv::CAP_PROP_BRIGHTNESS, -56);
 	cap.set(cv::CAP_PROP_SETTINGS, 1);
+	cap.set(cv::CAP_OPENCV_MJPEG, 1);
 	
 	while (cap.read(inFrame)) {
 		if (pThis->m_bStopCpature == TRUE)
@@ -907,34 +929,6 @@ CKUVCDlg* CKUVCDlg::GetInstance()
 	return s_pThis;
 }
 
-void CKUVCDlg::OnHScroll(UINT nSBCode, UINT nPos, CScrollBar* pScrollBar)
-{
-	// TODO: Add your message handler code here and/or call default
-	int device_num;
-
-	printf("nPos %d\n", nPos);
-	printf("nSBCode %d\n", nSBCode);
-
-//	CButton* m_ctlCheck = (CButton*)this->GetDlgItem(IDC_CHECK_DS);
-//	if (m_ctlCheck->GetCheck() == BST_CHECKED) {
-//		device_num = cv::CAP_DSHOW + this->m_CamId;
-//	}
-//	else {
-//		device_num = this->m_CamId;
-//	}
-//
-//	cv::VideoCapture cap(0 + device_num);
-//	cap.set(cv::CAP_PROP_EXPOSURE, nPos);
-	//if (nSBCode == TB_LINEDOWN)
-	//	MessageBox(_T("TB_LINEDOWN"));
-	//
-	//if (nSBCode == TB_LINEUP)
-	//	MessageBox(_T("TB_LINEUP"));
-
-	CDialogEx::OnHScroll(nSBCode, nPos, pScrollBar);
-}
-
-
 void CKUVCDlg::OnClose()
 {
 	int retry = 10;
@@ -984,32 +978,75 @@ void CKUVCDlg::OnClickedButtonXu()
 	
 	static const GUID UVC_xuGuid =
 	{ 0x0FB885C3, 0x68C2, 0x4547, {0x90, 0xF7, 0x8F, 0x47, 0x57, 0x9D, 0x95, 0xFC }};
-	
-	#define XU_LED_CMD 0x03
+
+	#define XU_AF_BTN_CMD 0x01
+	#define XU_LED_BTN_CMD 0x02
+	#define XU_LIGHT_LED_CMD 0x03
+	#define XU_PRE_LED_CMD 0x04
 	#define XU_SENSOR_ID_CMD 0x05
 	#define XU_IG1600_ID_CMD 0x06
 
 	BYTE read_data[4] = {0x00};
-	BYTE write_data[1] = { 0x01 };
+	BYTE write_data[5];
 	unsigned int datalen;
 	char testme[10];
-
-	datalen = sizeof(write_data) / sizeof(write_data[0]);
-	UvcCtl->WriteXu(UVC_xuGuid, XU_LED_CMD, write_data, datalen);
-
-	/* sensor ID */
-	datalen = 2;
-	UvcCtl->ReadXu(UVC_xuGuid, XU_SENSOR_ID_CMD, read_data, datalen);
-	sprintf(testme, "%x%x", read_data[0], read_data[1]);
-	CA2T str_sensor_id(testme);
-	m_ImageSensorID->SetWindowTextW(str_sensor_id);
 
 	/* IG1600 ID */
 	datalen = 4;
 	UvcCtl->ReadXu(UVC_xuGuid, XU_IG1600_ID_CMD, read_data, datalen);
-	sprintf(testme, "%x%x%x%x", read_data[0], read_data[1], read_data[2], read_data[3]);
+	sprintf(testme, "0x%x%x%x%x", read_data[0], read_data[1], read_data[2], read_data[3]);
 	CA2T str_ig1600_id(testme);
 	m_Ig1600ID->SetWindowTextW(str_ig1600_id);
+
+	/* sensor ID */
+	datalen = 2;
+	UvcCtl->ReadXu(UVC_xuGuid, XU_SENSOR_ID_CMD, read_data, datalen);
+	sprintf(testme, "0x%x%x", read_data[0], read_data[1]);
+	CA2T str_sensor_id(testme);
+	m_ImageSensorID->SetWindowTextW(str_sensor_id);
+
+	/* Light LED Ctrl */
+	datalen = 1;
+	write_data[0] = 0;
+	UvcCtl->WriteXu(UVC_xuGuid, XU_LIGHT_LED_CMD, write_data, datalen);
+	m_LightLedCtl->SetWindowTextW(_T("LED ON"));
+	Sleep(1000);
+	write_data[0] = 1;
+	UvcCtl->WriteXu(UVC_xuGuid, XU_LIGHT_LED_CMD, write_data, datalen);
+	m_LightLedCtl->SetWindowTextW(_T("LED OFF"));
+
+	/* Preview LED Ctrl */
+	datalen = 1;
+	write_data[0] = 0x01;
+	UvcCtl->WriteXu(UVC_xuGuid, XU_PRE_LED_CMD, write_data, datalen);
+	m_PreLedCtl->SetWindowTextW(_T("LED ON"));
+	Sleep(1000);
+	write_data[0] = 0x00;
+	UvcCtl->WriteXu(UVC_xuGuid, XU_PRE_LED_CMD, write_data, datalen);
+	m_PreLedCtl->SetWindowTextW(_T("LED OFF"));
+
+
+	/* AF Btn */
+	datalen = 1;
+	UvcCtl->ReadXu(UVC_xuGuid, XU_AF_BTN_CMD, read_data, datalen);
+
+	sprintf(testme, "Key OFF");
+	if (read_data[0])
+		sprintf(testme, "Key ON");
+
+	CA2T str_af_btn(testme);
+	m_AfBtn->SetWindowTextW(str_af_btn);
+
+	/* LED Btn */
+	datalen = 1;
+	UvcCtl->ReadXu(UVC_xuGuid, XU_LED_BTN_CMD, read_data, datalen);
+
+	sprintf(testme, "Key OFF");
+	if (read_data[0])
+		sprintf(testme, "Key ON");
+
+	CA2T str_led_btn(testme);
+	m_LedBtn->SetWindowTextW(str_led_btn);
 
 	UvcCtl->Uvc_Close();
 	delete UvcCtl;
