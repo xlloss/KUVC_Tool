@@ -86,6 +86,15 @@ struct HID_INFO
 	CString	strPortName;
 };
 
+enum ESUB_WND {
+	SUB_WND_1 = 0,
+	SUB_WND_2,
+	SUB_WND_3,
+	SUB_WND_4,
+	SUB_WND_5,
+	SUB_WND_MAX
+};
+
 // CKUVCDlg dialog
 class CKUVCDlg : public CDialogEx
 {
@@ -101,6 +110,15 @@ protected:
 	HICON m_hIcon;
 	HANDLE m_hCaptured;
 	HANDLE m_hCapturing;
+
+	cv::Rect m_rectUserCrop_sub[SUB_WND_MAX];
+	cv::Rect m_rectUserCrop_full;
+	cv::Mat m_MatSubFrame[SUB_WND_MAX];
+	cv::Mat	m_MatSubScaleFrame[SUB_WND_MAX];
+
+	double	m_dSubWndMaxLpVal[SUB_WND_MAX];
+	double	m_dSubWndCurLpVal[SUB_WND_MAX];
+
 	int m_iSavePic;
 	int m_CamId = 0;
 	double m_dFullWndMaxLpVal;
@@ -153,7 +171,6 @@ public:
 
 	afx_msg BOOL OnDeviceChange(UINT nEventType, DWORD_PTR dwData);
 	afx_msg void OnBnClickedCancel();
-	//afx_msg void OnBnClickedStart();
 	afx_msg void OnSetVideoFullWnd();
 	afx_msg void OnSetVideoScaleWnd();
 	afx_msg void OnCbnSelchangeVideoDevice();
@@ -171,10 +188,40 @@ public:
 	void LoadConfigSetting(void);
 	bool ConnectToServer();
 	int GetSubWndMinValue();
-	void SaveFocusRecordToExcel(CString SerialNumbe, int TestResult);
-	void DebugLog(char *pData, int nLen, bool bHex);
+	int GetSubWndMaxValue();
 
+	void DebugLog(char *pData, int nLen, bool bHex);
 	friend void onMouseFullWnd(int Event, int x, int y, int flags, void* param);
 	afx_msg void OnClose();
 	afx_msg void OnClickedButtonXu();
+	afx_msg void OnBnClickedDb();
+
+	CString focus_model;
+	int m_iFocus_mode;
+	int lens_center_x;
+	int lens_center_y;
+	int lens_center_counter;
+	int lens_shitf_calibration;
+
+	int auto_roi;
+	int auto_roi_getArea;
+	float auto_roi_lower_limit;
+	int Assist_lens_installation;
+	bool Assist_lens_drawing;
+	int auto_roi_counter;
+	int check_lens_shift;
+	int check_lens_shift_HSVlimit;
+	bool check_lens_shift_pass;
+	int check_lens_counter;
+	int sub_region_width;
+	int sub_region_high;
+	int check_rect_length;
+	int regionX[SUB_WND_MAX];
+	int regionY[SUB_WND_MAX];
+	float region_threshold[SUB_WND_MAX];
+	float region_lower_limit[SUB_WND_MAX];
+	bool checkLpGetMaxValue[SUB_WND_MAX];
+	bool sub_region_result[SUB_WND_MAX];
+
+
 };

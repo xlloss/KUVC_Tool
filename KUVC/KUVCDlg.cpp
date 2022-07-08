@@ -10,6 +10,11 @@
 #include <stdlib.h>
 #include "SaveDlg.h"
 #include "CMsSQL.h"
+#include "XmlProcess.h"
+#include "MSAccess.h"
+
+// blur algorithm using opencv
+#include "opencv/OpencvLaplacian.h"
 
 // base
 #include "xnBase.h"
@@ -83,6 +88,21 @@ using std::vector;
 #define GUID_DBT_DEV_9 0x51
 #define GUID_DBT_DEV_10 0xED
 
+#define VIDEO_FULL_W		1920
+#define VIDEO_FULL_H		1080
+#define VIDEO_SUB_WND_W		640
+#define VIDEO_SUB_WND_H		320
+#define TAB_H_GAP			30
+
+const char *strVideoSubWndName[SUB_WND_MAX] = { "VIDEO SUB0", "VIDEO SUB1", "VIDEO SUB2", "VIDEO SUB3", "VIDEO SUB4" };
+const int g_iVideoFullWndPos[4] = { 0, 0, VIDEO_FULL_W, VIDEO_FULL_H };
+
+int g_iVideoSubWndPos[SUB_WND_MAX][4] = { {0, 0, VIDEO_SUB_WND_W, VIDEO_SUB_WND_H},		// left top
+										{1280, 0, VIDEO_SUB_WND_W, VIDEO_SUB_WND_H},	// right top
+										{640, 320, VIDEO_SUB_WND_W, VIDEO_SUB_WND_H},	// center
+										{0, 640, VIDEO_SUB_WND_W, VIDEO_SUB_WND_H},		// left bottom
+										{1280, 640, VIDEO_SUB_WND_W, VIDEO_SUB_WND_H} }; // right bottom
+
 // global variable
 const char* strVideoFullWndName = "VIDEO FULL";
 cv::Point VertexOne, VertexThree;
@@ -108,7 +128,6 @@ void CKUVCDlg::DoDataExchange(CDataExchange* pDX)
 
 BEGIN_MESSAGE_MAP(CKUVCDlg, CDialogEx)
 	ON_WM_DEVICECHANGE()
-	ON_MESSAGE(WM_USER_SAVE_PIC, OnSaveData)
 	ON_BN_CLICKED(IDCANCEL, &CKUVCDlg::OnBnClickedCancel)
 	ON_CBN_SELCHANGE(IDC_COMBO_UVC_DEVICE, &CKUVCDlg::OnCbnSelchangeVideoDevice)
 	ON_CBN_DROPDOWN(IDC_COMBO_UVC_DEVICE, &CKUVCDlg::OnCbnDropDownVideoDevice)
@@ -118,6 +137,10 @@ BEGIN_MESSAGE_MAP(CKUVCDlg, CDialogEx)
 	ON_WM_HSCROLL()
 	ON_WM_CLOSE()
 	ON_BN_CLICKED(IDC_BUTTON_XU, &CKUVCDlg::OnClickedButtonXu)
+	ON_BN_CLICKED(IDC_DB_BTN, &CKUVCDlg::OnBnClickedDb)
+
+	/* VK_S */
+	ON_MESSAGE(WM_USER_SAVE_PIC, OnSaveData)
 END_MESSAGE_MAP()
 
 void CKUVCDlg::Init()
@@ -170,8 +193,6 @@ BOOL CKUVCDlg::OnInitDialog()
 	CRect SaveBtn_rect;
 	CRect ReCkBtn_rect;
 	CComboBox* pComboBox;
-	CButton *TestModeBox;
-	CButton *SavPic_ChkBox;
 	CA2T str_tmp(TEST_CAM_NAME);
 	int ret;
 	#define TEXT_DEF "N/A"
@@ -209,7 +230,8 @@ BOOL CKUVCDlg::OnInitDialog()
 
 	//xu test button
 	GetDlgItem(IDC_BUTTON_XU)->SetWindowPos(NULL, 0, 600, 100, 30, SWP_NOZORDER);
-
+	GetDlgItem(IDC_DB_BTN)->SetWindowPos(NULL, 0, 650, 100, 30, SWP_NOZORDER);
+	
 	CFont* m_font = new CFont();
 
 	m_font->CreatePointFont(200, L" ");
@@ -580,6 +602,9 @@ void CKUVCDlg::OnTcnSelchangeTabVideoSwitch(NMHDR *pNMHDR, LRESULT *pResult)
 		NorVideoWnd->ShowWindow(false);
 }
 
+
+
+
 LRESULT CKUVCDlg::OnSaveData(WPARAM wParam, LPARAM lParam)
 {
 	int nFolderLength, testResult;
@@ -589,7 +614,6 @@ LRESULT CKUVCDlg::OnSaveData(WPARAM wParam, LPARAM lParam)
 
 	CSaveDlg sdlg;
 	sdlg.m_iEnableButton = true;
-
 	testResult = sdlg.DoModal();
 	if (testResult != IDOK && testResult != IDCANCEL)
 		return FALSE;
@@ -611,23 +635,6 @@ LRESULT CKUVCDlg::OnSaveData(WPARAM wParam, LPARAM lParam)
 	GetModuleFileName(NULL, szPath, MAX_PATH);
 	strPath = szPath;
 	nFolderLength = strPath.ReverseFind('\\');
-
-	//SaveFocusRecordToExcel(sdlg.m_cstrPicSaveName, testResult); //save excel
-	SaveFocusRecordToExcel(CString("TEST"), testResult); //save excel
-
-	//if (m_iSavePic) {
-	//	//GetLocalTime(&st); //Get system local time
-	//	strToken.Format(_T("%s\\%s\\%04d%02d%02d"),
-	//		strPath.Left(nFolderLength),
-	//		LOG_DIR_STR, st.wYear, st.wMonth, st.wDay);
-	//
-	//	if (GetFileAttributes(strToken) == INVALID_FILE_ATTRIBUTES)
-	//		CreateDirectory(strToken, NULL);
-	//
-	//	cstrFileName.Format(L"%s\\%s.jpg", strToken, cstrPicSaveName);
-	//	std::string strFileName = CT2A(cstrFileName);
-	//	cv::imwrite(strFileName, m_UvcFrame);
-	//}
 
 	return TRUE;
 }
@@ -671,15 +678,88 @@ void CKUVCDlg::VideoScale(Mat *SrcFrame, Mat *DstFrame, int width, int high)
 	cv::resize(*SrcFrame, *DstFrame, dsize, CV_INTER_LINEAR);
 }
 
+vector<Point2f> center(5);
+
+
+void sort_area(int area[][4])
+{
+	int i, j;
+	int temp1, temp2;
+	for (i = 0; i < 5; i++)
+	{
+		for (j = i + 1; j < 5; j++)
+		{
+			if (area[i][1] > area[j][1])
+			{
+				temp1 = area[j][0];
+				temp2 = area[j][1];
+				area[j][0] = area[i][0];
+				area[j][1] = area[i][1];
+				area[i][0] = temp1;
+				area[i][1] = temp2;
+			}
+		}
+	}
+
+	for (i = 1; i < 4; i++)
+	{
+		for (j = i + 1; j < 4; j++)
+		{
+			if (area[i][0] > area[j][0])
+			{
+				temp1 = area[j][0];
+				temp2 = area[j][1];
+				area[j][0] = area[i][0];
+				area[j][1] = area[i][1];
+				area[i][0] = temp1;
+				area[i][1] = temp2;
+			}
+		}
+	}
+}
+
+int CKUVCDlg::GetSubWndMaxValue()
+{
+	int i, iMax, iNum[4] = { m_dSubWndCurLpVal[0], m_dSubWndCurLpVal[1], m_dSubWndCurLpVal[3], m_dSubWndCurLpVal[4] };
+
+	iMax = iNum[0];
+	for (i = 1; i < 4; i++)
+	{
+		if (iNum[i] > iMax)
+			iMax = iNum[i];
+	}
+
+	return iMax;
+}
+
+int CKUVCDlg::GetSubWndMinValue()
+{
+	int i, iMin, iNum[4] = { m_dSubWndCurLpVal[0], m_dSubWndCurLpVal[1], m_dSubWndCurLpVal[3], m_dSubWndCurLpVal[4] };
+
+	iMin = iNum[0];
+	for (i = 1; i < 4; i++)
+	{
+		if (iNum[i] < iMin)
+			iMin = iNum[i];
+	}
+
+	return iMin;
+}
+
+
 DWORD WINAPI CKUVCDlg::CaptureVideoThread(LPVOID lpVoid)
 {
+	char max_val_str[16], cur_val_str[16];
+	int iCount = 0, width = 1920, high = 1080, x1, y1, x2, y2;
 	bool bShowSubWnd = false;
 	Mat inFrame;
 	Mat *ScaleFrame;
 	char file_name[128];
-	int iCount = 0, device_num;
+	int device_num;
 	CvRect full_scale_rect;
+	COpencvLaplacian lp;
 	CKUVCDlg* pThis = (CKUVCDlg*)lpVoid;
+	#define CHECK_COUNTER 1
 
 	CButton *m_ctlCheck = (CButton*)pThis->GetDlgItem(IDC_CHECK_DS);
 	if (m_ctlCheck->GetCheck() == BST_CHECKED) {
@@ -716,11 +796,46 @@ DWORD WINAPI CKUVCDlg::CaptureVideoThread(LPVOID lpVoid)
 		else
 			iCount = 0;
 
+		/* 中心校正 */
+		if (pThis->lens_shitf_calibration == 1) {
+			lp.shitfcalibration(inFrame, &(pThis->lens_center_x), &(pThis->lens_center_y), &(pThis->lens_center_counter));
+		}
+
+
+		//Assist_lens_installation
+		if (pThis->Assist_lens_installation == 1)
+		{
+			pThis->Assist_lens_drawing = true;
+		}
+		else if (pThis->check_lens_shift > 0 && pThis->check_lens_shift_pass == false) //Lens shift
+		{
+			if (pThis->m_dFullWndCurLpVal >= pThis->auto_roi_lower_limit)
+			{
+				if (lp.findContractAndBrightness(inFrame, pThis->check_lens_shift, width, high, pThis->check_lens_shift_HSVlimit))
+				{
+					pThis->check_lens_counter++;
+					printf("check shift counter = %d \r\n", pThis->check_lens_counter);
+				}
+				else
+				{
+					pThis->check_lens_counter = 0;
+				}
+				if (pThis->check_lens_counter == CHECK_COUNTER)
+				{
+					pThis->check_lens_counter = 0;
+					pThis->check_lens_shift_pass = true;
+				}
+			}
+		}
+
+
+
 //		CWnd *FullModeWnd = NULL;
 //		CWnd *ScaleModeWnd = NULL;
 //		FullModeWnd = (CWnd*)pThis->m_pFullWndCtrls[0];
 //		ScaleModeWnd = (CWnd*)pThis->m_pFullWndCtrls[1];
 
+#if 0
 		if (pThis->m_bFullImageMode) {
 			cv::imshow(VIDEO_FULL_WND_NAME, inFrame);
 		} else {
@@ -729,6 +844,361 @@ DWORD WINAPI CKUVCDlg::CaptureVideoThread(LPVOID lpVoid)
 				UVC_VIDEO_SCALE_W, UVC_VIDEO_SCALE_H);
 			cv::imshow(VIDEO_SCALE_WND_NAME, *ScaleFrame);
 		}
+#endif
+
+
+		//Assist_lens_installation
+		if (pThis->Assist_lens_installation == 1)
+		{
+			pThis->Assist_lens_drawing = true;
+		}
+		else if (pThis->check_lens_shift > 0 && pThis->check_lens_shift_pass == false) //Lens shift
+		{
+			if (pThis->m_dFullWndCurLpVal >= pThis->auto_roi_lower_limit)
+			{
+				if (lp.findContractAndBrightness(inFrame, pThis->check_lens_shift, width, high, pThis->check_lens_shift_HSVlimit))
+				{
+					pThis->check_lens_counter++;
+					printf("check shift counter = %d \r\n", pThis->check_lens_counter);
+				}
+				else
+				{
+					pThis->check_lens_counter = 0;
+				}
+				if (pThis->check_lens_counter == CHECK_COUNTER)
+				{
+					pThis->check_lens_counter = 0;
+					pThis->check_lens_shift_pass = true;
+				}
+			}
+		}
+
+		//find char, 調焦
+		if (pThis->auto_roi == 1 && pThis->auto_roi_getArea == 0 && (pThis->check_lens_shift_pass))
+		{
+			//inFrame = cv::imread("1.jpg", IMREAD_COLOR);
+			//if(lp.LosdfindContour(inFrame, center))
+
+			pThis->GetDlgItem(IDC_PUSHBTN)->EnableWindow(false);
+
+			//char buf[256];
+			//sprintf(buf, "m_dFullWndCurLpVal=%d, auto_roi_lower_limit=%d\r\n", pThis->m_dFullWndCurLpVal, pThis->auto_roi_lower_limit);
+			//pThis->DebugLog(buf, strlen(buf), false);
+
+			if (pThis->m_dFullWndCurLpVal >= pThis->auto_roi_lower_limit)
+			{
+				if (lp.findchart(inFrame, center))
+				{
+					pThis->auto_roi_counter++;
+					if (pThis->auto_roi_counter == CHECK_COUNTER)
+					{
+						bShowSubWnd = TRUE;
+						pThis->auto_roi_getArea = 1;
+						TC_ITEM TabCtrlItem;
+
+						TabCtrlItem.mask = TCIF_TEXT;
+						TabCtrlItem.pszText = L"Sub"; // make tab title
+						pThis->m_TabCtrl.InsertItem(1, &TabCtrlItem); // append to tab
+						//pThis->GetDlgItem(IDC_PUSHBTN)->EnableWindow(true);
+
+						for (int i = 0; i < SUB_WND_MAX; i++)
+						{
+							if (center[0].x - pThis->sub_region_width / 2 >= 0 && center[0].y - pThis->sub_region_high / 2 >= 0)
+							{
+								g_iVideoSubWndPos[i][0] = center[i].x - pThis->sub_region_width / 2;
+								g_iVideoSubWndPos[i][1] = center[i].y - pThis->sub_region_high / 2;
+							}
+
+							//char buf[256];
+							//sprintf(buf, "g_iVideoSubWndPosX=%d, g_iVideoSubWndPos=%d\r\n", g_iVideoSubWndPos[i][0], g_iVideoSubWndPos[i][1]);
+							//pThis->DebugLog(buf, strlen(buf), false);
+
+														//if (g_iVideoSubWndPos[i][0] < 0 || g_iVideoSubWndPos[i][1] < 0 || g_iVideoSubWndPos[i][2] < 0 || g_iVideoSubWndPos[i][3] < 0)
+														//{
+														//	pThis->m_bCloseCapture = true;
+														//	AfxMessageBox(L"Find chart not is 5, lens focus fail");
+														//	break;
+														//}
+
+							if (g_iVideoSubWndPos[i][0] < 0)
+							{
+								//AfxMessageBox(L"Find chart not is 5, lens focus fail");
+								g_iVideoSubWndPos[i][0] = 10;
+							}
+
+							if (g_iVideoSubWndPos[i][1] < 0)
+							{
+								//AfxMessageBox(L"Find chart not is 5, lens focus fail");
+								g_iVideoSubWndPos[i][1] = 10;
+							}
+
+							if (g_iVideoSubWndPos[i][0] > 1920)
+							{
+								//pThis->m_bCloseCapture = true;
+								//AfxMessageBox(L"Find chart not is 5, lens focus fail");
+								//break;
+								g_iVideoSubWndPos[i][0] = 900;
+							}
+
+							if (g_iVideoSubWndPos[i][1] > 1080)
+							{
+								//pThis->m_bCloseCapture = true;
+								//AfxMessageBox(L"Find chart not is 5, lens focus fail");
+								//break;
+								g_iVideoSubWndPos[i][1] = 500;
+							}
+
+							int iSubWndPosSumX, iSubWndPosSumY;
+							iSubWndPosSumX = g_iVideoSubWndPos[i][0] + pThis->sub_region_width;
+							iSubWndPosSumY = g_iVideoSubWndPos[i][1] + pThis->sub_region_high;
+
+							if (iSubWndPosSumX > 1920)
+							{
+								//pThis->m_bCloseCapture = true;
+								//AfxMessageBox(L"Find chart not is 5, lens focus fail");
+								//break;
+								g_iVideoSubWndPos[i][0] = 900;
+							}
+
+							if (iSubWndPosSumY > 1080)
+							{
+								//pThis->m_bCloseCapture = true;
+								//AfxMessageBox(L"Find chart not is 5, lens focus fail");
+								//break;
+								g_iVideoSubWndPos[i][1] = 500;
+							}
+						}
+
+						//if (true == pThis->m_bCloseCapture) { // exit 
+						//	pThis->m_bCloseCapture = false;
+						//	break;
+						//}
+
+						sort_area(g_iVideoSubWndPos); //排序區
+
+						/* TODO */
+						//pThis->OnSetVideoSubWnd();
+						//pThis->m_TabCtrl.SetCurSel(1);
+
+						NMHDR nmhdr;
+						nmhdr.code = TCN_SELCHANGE;
+						nmhdr.hwndFrom = pThis->m_TabCtrl.GetSafeHwnd();
+						nmhdr.idFrom = pThis->m_TabCtrl.GetDlgCtrlID();
+						pThis->SendMessage(WM_NOTIFY, MAKELONG(TCN_SELCHANGE, 1), (LPARAM)(&nmhdr));
+					}
+				}
+				else
+				{
+					pThis->auto_roi_counter = 0;
+				}
+			}
+		}
+
+		//bool bShowSubWnd = pThis->m_TabCtrl.GetCurSel() ? TRUE : FALSE;
+
+		if (false == bShowSubWnd || true == pThis->m_bCaptureFrame) { // full wnd
+
+			// blur detection
+			pThis->m_dFullWndCurLpVal = lp.Laplacian(inFrame);
+			if (pThis->m_dFullWndCurLpVal >= pThis->m_dFullWndMaxLpVal) {
+				pThis->m_dFullWndMaxLpVal = pThis->m_dFullWndCurLpVal;
+			}
+
+			// crop from video frame
+			CvRect full_scale_rect;
+
+			full_scale_rect.x = g_iVideoFullWndPos[0] + pThis->m_rectUserCrop_full.x;
+			full_scale_rect.y = g_iVideoFullWndPos[1] + pThis->m_rectUserCrop_full.y;
+			full_scale_rect.width = pThis->m_rectUserCrop_full.width;
+			full_scale_rect.height = pThis->m_rectUserCrop_full.height;
+
+			//CString str;
+			//str.Format(L"x=%d, y=%d, width=%d, height=%d", full_scale_rect.x, full_scale_rect.y, full_scale_rect.width, full_scale_rect.height);
+			//AfxMessageBox(str);
+
+			pThis->m_MatFullFrame = inFrame(Rect(full_scale_rect));
+
+			Size dsize = Size(VIDEO_FULL_W, VIDEO_FULL_H);
+
+			// inter linear
+			cv::resize(pThis->m_MatFullFrame, pThis->m_MatFullScaleFrame, dsize, CV_INTER_LINEAR);
+
+			// put value and show
+			sprintf_s(max_val_str, "%.2f(Max)", pThis->m_dFullWndMaxLpVal);
+			sprintf_s(cur_val_str, "%.2f(Cur)", pThis->m_dFullWndCurLpVal);
+
+			if (pThis->Assist_lens_drawing == true)
+			{
+				x1 = 419;
+				y1 = pThis->check_lens_shift - 1;
+				x2 = 1499;
+				y2 = pThis->check_lens_shift - 1;
+				cv::line(pThis->m_MatFullScaleFrame, Point(x1, y1), Point(x2, y2), Scalar(0, 0, 255), 2);
+
+				x1 = 419;
+				y1 = 1079 - pThis->check_lens_shift;
+				x2 = 1499;
+				y2 = 1079 - pThis->check_lens_shift;
+				cv::line(pThis->m_MatFullScaleFrame, Point(x1, y1), Point(x2, y2), Scalar(0, 0, 255), 2);
+
+				x1 = 419;
+				y1 = pThis->check_lens_shift - 1;
+				x2 = 419;
+				y2 = 1079 - pThis->check_lens_shift;
+				cv::line(pThis->m_MatFullScaleFrame, Point(x1, y1), Point(x2, y2), Scalar(0, 0, 255), 2);
+
+				x1 = 1499;
+				y1 = pThis->check_lens_shift - 1;
+				x2 = 1499;
+				y2 = 1079 - pThis->check_lens_shift;
+				cv::line(pThis->m_MatFullScaleFrame, Point(x1, y1), Point(x2, y2), Scalar(0, 0, 255), 2);
+			}
+			else if (pThis->check_lens_shift > 0 && pThis->check_lens_shift_pass == false)
+			{
+				x1 = width / 2 - 150;
+				y1 = pThis->check_lens_shift;
+				x2 = width / 2 + 150;
+				y2 = pThis->check_lens_shift;
+				cv::line(pThis->m_MatFullScaleFrame, Point(x1, y1), Point(x2, y2), Scalar(0, 0, 255), 2);
+
+				y1 = high - pThis->check_lens_shift;
+				y2 = high - pThis->check_lens_shift;
+				cv::line(pThis->m_MatFullScaleFrame, Point(x1, y1), Point(x2, y2), Scalar(0, 0, 255), 2);
+			}
+			else if (pThis->lens_shitf_calibration == 1)
+			{
+				x1 = width / 2 - 30;
+				y1 = high / 2;
+				x2 = width / 2 + 30;
+				y2 = high / 2;
+				cv::line(pThis->m_MatFullScaleFrame, Point(x1, y1), Point(x2, y2), Scalar(0, 0, 0), 2);
+
+				x1 = width / 2;
+				y1 = high / 2 - 30;
+				x2 = width / 2;
+				y2 = high / 2 + 30;
+				cv::line(pThis->m_MatFullScaleFrame, Point(x1, y1), Point(x2, y2), Scalar(0, 0, 0), 2);
+
+				if (pThis->lens_center_x != 0 && pThis->lens_center_y != 0)
+				{
+					sprintf_s(cur_val_str, "(%d,%d)", pThis->lens_center_x, pThis->lens_center_y);
+
+					cv::putText(pThis->m_MatFullScaleFrame, cur_val_str, Point(800, 120), 0, 2, Scalar(0, 255, 255), 2);
+				}
+			}
+
+			if (pThis->Assist_lens_installation == 0 && pThis->lens_shitf_calibration == 0)
+				cv::putText(pThis->m_MatFullScaleFrame, cur_val_str, Point(800, 120), 0, 2, Scalar(0, 255, 255), 2);
+			cv::imshow(VIDEO_FULL_WND_NAME, pThis->m_MatFullScaleFrame);
+
+			pThis->m_UvcFrame = pThis->m_MatFullScaleFrame;
+
+			// save
+			if (TRUE == pThis->m_bCaptureFrame) {
+				pThis->m_bCaptureFrame = false;
+				SYSTEMTIME curTime;
+				GetLocalTime(&curTime);
+				sprintf_s(file_name, "%04d%02d%02d%02d%02d%02d.jpg", curTime.wYear, curTime.wMonth, curTime.wDay, curTime.wHour, curTime.wMinute, curTime.wSecond);
+				cv::imwrite(file_name, inFrame);
+			}
+		}
+		else //sub wnd
+		{
+			//crop from video frame
+			CvRect full_scale_rect;
+			full_scale_rect.x = g_iVideoFullWndPos[0] + pThis->m_rectUserCrop_full.x;
+			full_scale_rect.y = g_iVideoFullWndPos[1] + pThis->m_rectUserCrop_full.y;
+			full_scale_rect.width = pThis->m_rectUserCrop_full.width;
+			full_scale_rect.height = pThis->m_rectUserCrop_full.height;
+			pThis->m_MatFullFrame = inFrame(Rect(full_scale_rect));
+
+			Size dsize = Size(VIDEO_FULL_W, VIDEO_FULL_H);
+
+			//inter linear
+			cv::resize(pThis->m_MatFullFrame, pThis->m_MatFullScaleFrame, dsize, CV_INTER_LINEAR);
+			cv::imshow(VIDEO_FULL_WND_NAME, pThis->m_MatFullScaleFrame);
+
+			pThis->m_UvcFrame = pThis->m_MatFullScaleFrame;
+
+			for (int i = 0; i < SUB_WND_MAX; i++)
+			{
+				//crop from video frame
+				CvRect sub_wnd_rect, scale_rect;
+				sub_wnd_rect.x = g_iVideoSubWndPos[i][0];
+				sub_wnd_rect.y = g_iVideoSubWndPos[i][1];
+				sub_wnd_rect.width = g_iVideoSubWndPos[i][2];
+				sub_wnd_rect.height = g_iVideoSubWndPos[i][3];
+
+				//blur detection
+				pThis->m_dSubWndCurLpVal[i] = lp.Laplacian(inFrame(Rect(sub_wnd_rect))); //為了讓GetSubWndMaxValue能取得當前的Laplacian值,移到這邊
+			}
+
+			int iSubWndLpMax, iSubWndLpMin;
+			iSubWndLpMax = pThis->GetSubWndMaxValue();
+			iSubWndLpMin = pThis->GetSubWndMinValue();
+
+			for (int i = 0; i < SUB_WND_MAX; i++)
+			{
+
+				CvRect scale_rect;
+
+				//crop ROI by user specific
+				scale_rect.x = g_iVideoSubWndPos[i][0] + pThis->m_rectUserCrop_sub[i].x;
+				scale_rect.y = g_iVideoSubWndPos[i][1] + pThis->m_rectUserCrop_sub[i].y;
+				scale_rect.width = pThis->m_rectUserCrop_sub[i].width;
+				scale_rect.height = pThis->m_rectUserCrop_sub[i].height;
+				pThis->m_MatSubFrame[i] = inFrame(Rect(scale_rect));
+
+				//fit size to (VIDEO_SUB_WND_W, VIDEO_SUB_WND_H)
+				Size dsize;
+				if (pThis->sub_region_width > 0)
+					dsize = Size(pThis->sub_region_width, pThis->sub_region_high);
+				else
+					dsize = Size(VIDEO_SUB_WND_W, VIDEO_SUB_WND_H);
+
+				//inter linear
+				cv::resize(pThis->m_MatSubFrame[i], pThis->m_MatSubScaleFrame[i], dsize, CV_INTER_LINEAR);
+
+				//put value and show
+				if (pThis->m_dSubWndCurLpVal[i] >= pThis->m_dSubWndMaxLpVal[i])
+				{
+					pThis->m_dSubWndMaxLpVal[i] = pThis->m_dSubWndCurLpVal[i];
+				}
+				else if (pThis->m_dSubWndMaxLpVal[i] - pThis->m_dSubWndCurLpVal[i] > 5)
+				{
+					pThis->checkLpGetMaxValue[i] = TRUE;
+				}
+
+				sprintf_s(max_val_str, "%.2f(Max)", pThis->m_dSubWndMaxLpVal[i]);
+				sprintf_s(cur_val_str, "%.2f(Cur)", pThis->m_dSubWndCurLpVal[i]);
+				//cv::putText(pThis->m_MatSubScaleFrame[i], max_val_str, Point(10, 30), 0, 1, Scalar(0, 255, 255), 2);
+				//cv::putText(pThis->m_MatSubScaleFrame[i], cur_val_str, Point(10, 30), 0, 1, Scalar(0, 255, 255), 2);
+
+				if (pThis->region_threshold[i] > 0 && pThis->checkLpGetMaxValue[SUB_WND_1] && pThis->checkLpGetMaxValue[SUB_WND_2] && pThis->checkLpGetMaxValue[SUB_WND_3] && pThis->checkLpGetMaxValue[SUB_WND_4] && pThis->checkLpGetMaxValue[SUB_WND_5])
+				{
+					if ((/*(fabs(pThis->m_dSubWndMaxLpVal[i] - pThis->m_dSubWndCurLpVal[i])*/ (iSubWndLpMax - iSubWndLpMin) <= pThis->region_threshold[i]) && (pThis->m_dSubWndCurLpVal[i] >= pThis->region_lower_limit[i]))
+					{
+						pThis->sub_region_result[i] = true;
+						cv::putText(pThis->m_MatSubScaleFrame[i], cur_val_str, Point(10, 30), 0, 1, Scalar(0, 255, 0), 2); //Succeed, show green text
+					}
+					else
+					{
+						pThis->sub_region_result[i] = false;
+						cv::putText(pThis->m_MatSubScaleFrame[i], cur_val_str, Point(10, 30), 0, 1, Scalar(0, 0, 255), 2); //Fail, show red text
+					}
+				}
+				else
+				{
+					pThis->sub_region_result[i] = false;
+					cv::putText(pThis->m_MatSubScaleFrame[i], cur_val_str, Point(10, 30), 0, 1, Scalar(0, 0, 255), 2);
+					//cv::rectangle(pThis->m_MatSubScaleFrame[i], Rect(pThis->sub_region_width / 2 - pThis->check_rect_length / 2, pThis->sub_region_high / 2 - pThis->check_rect_length / 2, pThis->check_rect_length, pThis->check_rect_length), Scalar(0, 0, 255), 3, 1, 0);
+				}
+				cv::imshow(strVideoSubWndName[i], pThis->m_MatSubScaleFrame[i]);
+			}
+		}
+
+
+
 	}
 
 	cap.release();
@@ -845,47 +1315,6 @@ bool CKUVCDlg::ConnectToServer()
 	}
 }
 
-void CKUVCDlg::SaveFocusRecordToExcel(CString SerialNumber, int TestResult)
-{
-	// TODO: Add your control notification handler code here
-	FILE *pFile;
-	bool bFileExists;
-	int nFolderLength;
-	TCHAR szPath[MAX_PATH] = { 0 };
-	CString cstrFolderPath, cstrCSV_Value, strPath, strToken, strSN, strResult, strTime, strError;
-	SYSTEMTIME st;
-
-	strSN = L"";
-	strSN = SerialNumber;
-
-	//Get system local time
-	GetLocalTime(&st);
-
-	//get the execute folder and create "Log" if needed
-	GetModuleFileName(NULL, szPath, MAX_PATH);
-	strPath = szPath;
-
-	nFolderLength = strPath.ReverseFind('\\');
-	strToken.Format(_T("%s\\%s"), strPath.Left(nFolderLength), LOG_DIR_STR);
-	if (GetFileAttributes(strToken) == INVALID_FILE_ATTRIBUTES)
-		CreateDirectory(strToken, NULL);
-
-	strTime.Format(_T("\\%04d_%02d_%02d_%02d_%02d_%02d"), st.wYear, st.wMonth, st.wDay, st.wHour, st.wMinute, st.wSecond);
-
-
-	bFileExists = PathFileExists(cstrFolderPath);
-
-	if (TestResult == IDOK)
-		strResult = L"PASS";
-	else
-		strResult = L"FAIL";
-
-	_wfopen(strToken, L"a+, ccs= UTF-16LE");
-	_fcloseall();
-
-
-}
-
 void CKUVCDlg::DebugLog(char *pData, int nLen, bool bHex)
 {
 	CFile cf;
@@ -929,6 +1358,225 @@ CKUVCDlg* CKUVCDlg::GetInstance()
 	return s_pThis;
 }
 
+void CKUVCDlg::LoadConfigSetting()
+{
+	std::fstream file;
+	file.open("ROI_Config.ini", std::ios::in);
+
+	if (file)
+	{
+		string line, str, token;
+		while (std::getline(file, line))
+		{
+			ClearAllSpace(line);
+			string::size_type position;
+			std::istringstream stream(line);
+			while (stream >> str)
+			{
+				position = str.find("=");
+				if (position != str.npos)
+				{
+					token.assign(str, 0, position);
+					if (token.compare("model") == 0)
+					{
+						token.assign(str, position + 1);
+						focus_model = token.c_str();
+						std::wcout << "focus_model = " << focus_model.GetString() << endl;
+					}
+					else if (token.compare("focus_mode") == 0)
+					{
+						token.assign(str, position + 1);
+						m_iFocus_mode = atoi(token.c_str());
+						cout << "focus_mode = " << m_iFocus_mode << endl;
+					}
+					else if (token.compare("auto_roi") == 0)
+					{
+						token.assign(str, position + 1);
+						auto_roi = atoi(token.c_str());
+						cout << "auto_roi = " << auto_roi << endl;
+					}
+					else if (token.compare("auto_roi_lower_limit") == 0)
+					{
+						token.assign(str, position + 1);
+						auto_roi_lower_limit = atof(token.c_str());
+						cout << "auto_roi_lower_limit = " << auto_roi_lower_limit << endl;
+					}
+					else if (token.compare("Assist_lens_installation") == 0)
+					{
+						token.assign(str, position + 1);
+						Assist_lens_installation = atoi(token.c_str());
+						cout << "Assist_lens_installation = " << Assist_lens_installation << endl;
+					}
+					else if (token.compare("check_lens_shift") == 0)
+					{
+						token.assign(str, position + 1);
+						check_lens_shift = atof(token.c_str());
+						cout << "check_lens_shift = " << check_lens_shift << endl;
+					}
+					else if (token.compare("check_lens_shift_HSVlimit") == 0)
+					{
+						token.assign(str, position + 1);
+						check_lens_shift_HSVlimit = atof(token.c_str());
+						cout << "check_lens_shift_HSVlimit = " << check_lens_shift_HSVlimit << endl;
+					}
+					else if (token.compare("lens_shitf_calibration") == 0)
+					{
+						token.assign(str, position + 1);
+						lens_shitf_calibration = atoi(token.c_str());
+						cout << "lens_shitf_calibration = " << lens_shitf_calibration << endl;
+					}
+					else if (token.compare("sub_region_width") == 0)
+					{
+						token.assign(str, position + 1);
+						sub_region_width = atoi(token.c_str());
+						cout << "sub_region_width = " << sub_region_width << endl;
+					}
+					else if (token.compare("sub_region_high") == 0)
+					{
+						token.assign(str, position + 1);
+						sub_region_high = atoi(token.c_str());
+						cout << "sub_region_high = " << sub_region_high << endl;
+					}
+					else if (token.compare("region1_x") == 0)
+					{
+						token.assign(str, position + 1);
+						regionX[SUB_WND_1] = atoi(token.c_str());
+						cout << "region1_x = " << regionX[SUB_WND_1] << endl;
+					}
+					else if (token.compare("region1_y") == 0)
+					{
+						token.assign(str, position + 1);
+						regionY[SUB_WND_1] = atoi(token.c_str());
+						cout << "region1_y = " << regionY[SUB_WND_1] << endl;
+					}
+					else if (token.compare("region1_threshold") == 0)
+					{
+						token.assign(str, position + 1);
+						region_threshold[SUB_WND_1] = atof(token.c_str());
+						cout << "region1_threshold = " << region_threshold[SUB_WND_1] << endl;
+					}
+					else if (token.compare("region1_lower_limit") == 0)
+					{
+						token.assign(str, position + 1);
+						region_lower_limit[SUB_WND_1] = atof(token.c_str());
+						cout << "region1_lower_limit = " << region_lower_limit[SUB_WND_1] << endl;
+					}
+					else if (token.compare("region2_x") == 0)
+					{
+						token.assign(str, position + 1);
+						regionX[SUB_WND_2] = atoi(token.c_str());
+						cout << "region2_x = " << regionX[SUB_WND_2] << endl;
+					}
+					else if (token.compare("region2_y") == 0)
+					{
+						token.assign(str, position + 1);
+						regionY[SUB_WND_2] = atoi(token.c_str());
+						cout << "region2_y = " << regionY[SUB_WND_2] << endl;
+					}
+					else if (token.compare("region2_threshold") == 0)
+					{
+						token.assign(str, position + 1);
+						region_threshold[SUB_WND_2] = atof(token.c_str());
+						cout << "region2_threshold = " << region_threshold[SUB_WND_2] << endl;
+					}
+					else if (token.compare("region2_lower_limit") == 0)
+					{
+						token.assign(str, position + 1);
+						region_lower_limit[SUB_WND_2] = atof(token.c_str());
+						cout << "region2_lower_limit = " << region_lower_limit[SUB_WND_2] << endl;
+					}
+					else if (token.compare("region3_x") == 0)
+					{
+						token.assign(str, position + 1);
+						regionX[SUB_WND_3] = atoi(token.c_str());
+						cout << "region3_x = " << regionX[SUB_WND_3] << endl;
+					}
+					else if (token.compare("region3_y") == 0)
+					{
+						token.assign(str, position + 1);
+						regionY[SUB_WND_3] = atoi(token.c_str());
+						cout << "region3_y = " << regionY[SUB_WND_3] << endl;
+					}
+					else if (token.compare("region3_threshold") == 0)
+					{
+						token.assign(str, position + 1);
+						region_threshold[SUB_WND_3] = atof(token.c_str());
+						cout << "region3_threshold = " << region_threshold[SUB_WND_3] << endl;
+					}
+					else if (token.compare("region3_lower_limit") == 0)
+					{
+						token.assign(str, position + 1);
+						region_lower_limit[SUB_WND_3] = atof(token.c_str());
+						cout << "region3_lower_limit = " << region_lower_limit[SUB_WND_3] << endl;
+					}
+					else if (token.compare("region4_x") == 0)
+					{
+						token.assign(str, position + 1);
+						regionX[SUB_WND_4] = atoi(token.c_str());
+						cout << "region4_x = " << regionX[SUB_WND_4] << endl;
+					}
+					else if (token.compare("region4_y") == 0)
+					{
+						token.assign(str, position + 1);
+						regionY[SUB_WND_4] = atoi(token.c_str());
+						cout << "region4_y = " << regionY[SUB_WND_4] << endl;
+					}
+					else if (token.compare("region4_threshold") == 0)
+					{
+						token.assign(str, position + 1);
+						region_threshold[SUB_WND_4] = atof(token.c_str());
+						cout << "region4_threshold = " << region_threshold[SUB_WND_4] << endl;
+					}
+					else if (token.compare("region4_lower_limit") == 0)
+					{
+						token.assign(str, position + 1);
+						region_lower_limit[SUB_WND_4] = atof(token.c_str());
+						cout << "region4_lower_limit = " << region_lower_limit[SUB_WND_4] << endl;
+					}
+					else if (token.compare("region5_x") == 0)
+					{
+						token.assign(str, position + 1);
+						regionX[SUB_WND_5] = atoi(token.c_str());
+						cout << "region5_x = " << regionX[SUB_WND_5] << endl;
+					}
+					else if (token.compare("region5_y") == 0)
+					{
+						token.assign(str, position + 1);
+						regionY[SUB_WND_5] = atoi(token.c_str());
+						cout << "region5_y = " << regionY[SUB_WND_5] << endl;
+					}
+					else if (token.compare("region5_threshold") == 0)
+					{
+						token.assign(str, position + 1);
+						region_threshold[SUB_WND_5] = atof(token.c_str());
+						cout << "region5_threshold = " << region_threshold[SUB_WND_5] << endl;
+					}
+					else if (token.compare("region5_lower_limit") == 0)
+					{
+						token.assign(str, position + 1);
+						region_lower_limit[SUB_WND_5] = atof(token.c_str());
+						cout << "region5_lower_limit = " << region_lower_limit[SUB_WND_5] << endl;
+					}
+				}
+			}
+		}
+
+		for (int i = 0; i < SUB_WND_MAX; i++)
+		{
+			g_iVideoSubWndPos[i][0] = regionX[i];
+			g_iVideoSubWndPos[i][1] = regionY[i];
+			g_iVideoSubWndPos[i][2] = sub_region_width;
+			g_iVideoSubWndPos[i][3] = sub_region_high;
+		}
+		file.close();
+	}
+	else
+	{
+		MessageBox(L"ROI_Config.ini读取档案失败");
+	}
+}
+
+
 void CKUVCDlg::OnClose()
 {
 	int retry = 10;
@@ -966,7 +1614,6 @@ void CKUVCDlg::OnClose()
 
 	CDialogEx::OnClose();
 }
-
 
 void CKUVCDlg::OnClickedButtonXu()
 {
@@ -1050,4 +1697,9 @@ void CKUVCDlg::OnClickedButtonXu()
 
 	UvcCtl->Uvc_Close();
 	delete UvcCtl;
+}
+
+void CKUVCDlg::OnBnClickedDb()
+{
+
 }

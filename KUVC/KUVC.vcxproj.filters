@@ -96,6 +96,12 @@
     <ClInclude Include="Uvc.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="XmlProcess.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="MSAccess.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="OpenCVDeviceEnumerator\DeviceEnumerator.cpp">
@@ -126,6 +132,12 @@
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="Uvc.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="XmlProcess.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="MSAccess.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>
