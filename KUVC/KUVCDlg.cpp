@@ -60,14 +60,14 @@ using std::vector;
 #define VIDEO_FULL_WND_NAME "VIDEO FULL"
 #define VIDEO_SCALE_WND_NAME "VIDEO SCALE"
 
-#define VIDEO_FULL_W 3840
-#define VIDEO_FULL_H 2160
+#define VIDEO_FULL_W 1920
+#define VIDEO_FULL_H 1080
 
 #define UVC_VIDEO_ORG_W VIDEO_FULL_W
 #define UVC_VIDEO_ORG_H VIDEO_FULL_W
 
-#define UVC_VIDEO_SCALE_W 640
-#define UVC_VIDEO_SCALE_H 480
+#define UVC_VIDEO_SCALE_W 960
+#define UVC_VIDEO_SCALE_H 540
 
 #define TAB_H_GAP 30
 
@@ -82,6 +82,69 @@ using std::vector;
 #define GUID_DBT_DEV_8 0xB9
 #define GUID_DBT_DEV_9 0x51
 #define GUID_DBT_DEV_10 0xED
+
+
+/* ROI */
+#define ROI_NUM 5
+
+#define ROI_FULL_W (VIDEO_FULL_W / 3)
+#define ROI_FULL_H (VIDEO_FULL_H / 3)
+#define ROI_FULL_CX (ROI_FULL_W / 2)
+#define ROI_FULL_CY (ROI_FULL_H / 2)
+#define ROI_FULL_X(n) (n)
+#define ROI_FULL_Y(n) (n)
+
+#define ROI_SCALE_W (UVC_VIDEO_SCALE_W / 3)
+#define ROI_SCALE_H (UVC_VIDEO_SCALE_H / 3)
+#define ROI_SCALE_CX (ROI_SCALE_W / 2)
+#define ROI_SCALE_CY (ROI_SCALE_H / 2)
+#define ROI_SCALE_X(n) (n)
+#define ROI_SCALE_Y(n) (n)
+
+#define ROI1_FULL_X 0
+#define ROI1_FULL_Y 0
+#define ROI2_FULL_X (VIDEO_FULL_W / 3 * 2)
+#define ROI2_FULL_Y 0
+#define ROI3_FULL_X 0
+#define ROI3_FULL_Y (VIDEO_FULL_H / 3 * 2)
+#define ROI4_FULL_X (VIDEO_FULL_W / 3 * 2)
+#define ROI4_FULL_Y (VIDEO_FULL_H / 3 * 2)
+#define ROI5_FULL_X (VIDEO_FULL_W / 3)
+#define ROI5_FULL_Y (VIDEO_FULL_H / 3)
+
+#define ROI1_SCALE_X 0
+#define ROI1_SCALE_Y 0
+#define ROI2_SCALE_X (UVC_VIDEO_SCALE_W/ 3 * 2)
+#define ROI2_SCALE_Y 0
+#define ROI3_SCALE_X 0
+#define ROI3_SCALE_Y (UVC_VIDEO_SCALE_H/ 3 * 2)
+#define ROI4_SCALE_X (UVC_VIDEO_SCALE_W / 3 * 2)
+#define ROI4_SCALE_Y (UVC_VIDEO_SCALE_H / 3 * 2)
+#define ROI5_SCALE_X (UVC_VIDEO_SCALE_W / 3)
+#define ROI5_SCALE_Y (UVC_VIDEO_SCALE_H / 3)
+
+
+#define ROI1_FULL_TEX_POS_X ROI_FULL_CX
+#define ROI1_FULL_TEX_POS_Y ROI_FULL_CY
+#define ROI2_FULL_TEX_POS_X (ROI_FULL_CX + ROI2_FULL_X)
+#define ROI2_FULL_TEX_POS_Y (ROI_FULL_CY + ROI2_FULL_Y)
+#define ROI3_FULL_TEX_POS_X (ROI_FULL_CX + ROI3_FULL_X)
+#define ROI3_FULL_TEX_POS_Y (ROI_FULL_CY + ROI3_FULL_Y)
+#define ROI4_FULL_TEX_POS_X (ROI_FULL_CX + ROI4_FULL_X)
+#define ROI4_FULL_TEX_POS_Y (ROI_FULL_CY + ROI4_FULL_Y)
+#define ROI5_FULL_TEX_POS_X (ROI_FULL_CX + ROI5_FULL_X)
+#define ROI5_FULL_TEX_POS_Y (ROI_FULL_CY + ROI5_FULL_Y)
+
+#define ROI1_SCALE_TEX_POS_X ROI_SCALE_CX
+#define ROI1_SCALE_TEX_POS_Y ROI_SCALE_CY
+#define ROI2_SCALE_TEX_POS_X (ROI_SCALE_CX + ROI2_SCALE_X)
+#define ROI2_SCALE_TEX_POS_Y (ROI_SCALE_CY + ROI2_SCALE_Y)
+#define ROI3_SCALE_TEX_POS_X (ROI_SCALE_CX + ROI3_SCALE_X)
+#define ROI3_SCALE_TEX_POS_Y (ROI_SCALE_CY + ROI3_SCALE_Y)
+#define ROI4_SCALE_TEX_POS_X (ROI_SCALE_CX + ROI4_SCALE_X)
+#define ROI4_SCALE_TEX_POS_Y (ROI_SCALE_CY + ROI4_SCALE_Y)
+#define ROI5_SCALE_TEX_POS_X (ROI_SCALE_CX + ROI5_SCALE_X)
+#define ROI5_SCALE_TEX_POS_Y (ROI_SCALE_CY + ROI5_SCALE_Y)
 
 // global variable
 const char* strVideoFullWndName = "VIDEO FULL";
@@ -207,79 +270,79 @@ BOOL CKUVCDlg::OnInitDialog()
 	ShowVideoFullWnd(FALSE);
 	ShowVideoScaleWnd(TRUE);
 
-	//xu test button
-	GetDlgItem(IDC_BUTTON_XU)->SetWindowPos(NULL, 0, 600, 100, 30, SWP_NOZORDER);
+//	//xu test button
+//	GetDlgItem(IDC_BUTTON_XU)->SetWindowPos(NULL, 0, 600, 100, 30, SWP_NOZORDER);
+//
+//	CFont* m_font = new CFont();
+//
+//	m_font->CreatePointFont(200, L" ");
+//	GetDlgItem(IDC_CHECK_DS)->SetWindowPos(NULL, DIRECTSHOW_CKB_X, DIRECTSHOW_CKB_Y, 
+//	DIRECTSHOW_CKB_W, DIRECTSHOW_CKB_H, SWP_NOZORDER);
+//
+//	/* IG ID */
+//	CStatic* m_Ig1600TextCtl = new CStatic();
+//	m_Ig1600TextCtl->Create(_T("IG1600 ID :"), WS_CHILD | WS_VISIBLE | SS_LEFT,
+//		CRect(TEX_IG1600_X, TEX_IG1600_Y, TEX_IG1600_W, TEX_IG1600_H), this);
+//	m_Ig1600TextCtl->SetFont(m_font);
+//
+//	m_Ig1600ID = new CStatic();
+//	m_Ig1600ID->Create(_T(TEXT_DEF), WS_CHILD | WS_VISIBLE | SS_LEFT,
+//		CRect(TEX_IG1600_X + 130, TEX_IG1600_Y, TEX_IG1600_W + 200, TEX_IG1600_H), this);
+//	m_Ig1600ID->SetFont(m_font);
+//
+//
+//	/* Sensor ID */
+//	CStatic* m_ImageSensorTextCtl = new CStatic();
+//	m_ImageSensorTextCtl->Create(_T("Sensor ID :"), WS_CHILD | WS_VISIBLE | SS_LEFT,
+//		CRect(TEX_IMGSEN_X, TEX_IMGSEN_Y, TEX_IMGSEN_W, TEX_IMGSEN_H), this);
+//	m_ImageSensorTextCtl->SetFont(m_font);
+//
+//	m_ImageSensorID = new CStatic();
+//	m_ImageSensorID->Create(_T(TEXT_DEF), WS_CHILD | WS_VISIBLE | SS_LEFT,
+//		CRect(TEX_IMGSEN_X + 130, TEX_IMGSEN_Y, TEX_IMGSEN_W + 200, TEX_IMGSEN_H), this);
+//	m_ImageSensorID->SetFont(m_font);
+//
+//	/* Light LED */
+//	CStatic* m_LedTextCtl = new CStatic();
+//	m_LedTextCtl->Create(_T("LLED :"), WS_CHILD | WS_VISIBLE | SS_LEFT,
+//		CRect(TEX_LED_X, TEX_LED_Y, TEX_LED_W, TEX_LED_H), this);
+//	m_LedTextCtl->SetFont(m_font);
+//
+//	m_LightLedCtl = new CStatic();
+//	m_LightLedCtl->Create(_T(TEXT_DEF), WS_CHILD | WS_VISIBLE | SS_LEFT,
+//		CRect(TEX_LED_X + 130, TEX_LED_Y, TEX_LED_W + 200, TEX_LED_H), this);
+//	m_LightLedCtl->SetFont(m_font);
+//
+//	/* PreView LED */
+//	CStatic* m_LightTextCtl = new CStatic();
+//	m_LightTextCtl->Create(_T("PLED :"), WS_CHILD | WS_VISIBLE | SS_LEFT,
+//		CRect(TEX_LIGHT_X, TEX_LIGHT_Y, TEX_LIGHT_W, TEX_LIGHT_H), this);
+//	m_LightTextCtl->SetFont(m_font);
+//
+//	m_PreLedCtl = new CStatic();
+//	m_PreLedCtl->Create(_T(TEXT_DEF), WS_CHILD | WS_VISIBLE | SS_LEFT,
+//		CRect(TEX_LIGHT_X + 130, TEX_LIGHT_Y, TEX_LIGHT_W + 200, TEX_LIGHT_H), this);
+//	m_PreLedCtl->SetFont(m_font);
+//
+//	/* AF Btn */
+//	CStatic* m_AfBtnTextCtl = new CStatic();
+//	m_AfBtnTextCtl->Create(_T("AF Btn :"), WS_CHILD | WS_VISIBLE | SS_LEFT,
+//		CRect(BTN_AF_X, BTN_AF_Y, BTN_AF_W, BTN_AF_H), this);
+//	m_AfBtnTextCtl->SetFont(m_font);
+//	m_AfBtn = new CStatic();
+//	m_AfBtn->Create(_T(TEXT_DEF), WS_CHILD | WS_VISIBLE | SS_LEFT,
+//		CRect(BTN_AF_X + 150, BTN_AF_Y, BTN_AF_W + 200, BTN_AF_H), this);
+//	m_AfBtn->SetFont(m_font);
 
-	CFont* m_font = new CFont();
 
-	m_font->CreatePointFont(200, L" ");
-	GetDlgItem(IDC_CHECK_DS)->SetWindowPos(NULL, DIRECTSHOW_CKB_X, DIRECTSHOW_CKB_Y, 
-	DIRECTSHOW_CKB_W, DIRECTSHOW_CKB_H, SWP_NOZORDER);
-
-	/* IG ID */
-	CStatic* m_Ig1600TextCtl = new CStatic();
-	m_Ig1600TextCtl->Create(_T("IG1600 ID :"), WS_CHILD | WS_VISIBLE | SS_LEFT,
-		CRect(TEX_IG1600_X, TEX_IG1600_Y, TEX_IG1600_W, TEX_IG1600_H), this);
-	m_Ig1600TextCtl->SetFont(m_font);
-
-	m_Ig1600ID = new CStatic();
-	m_Ig1600ID->Create(_T(TEXT_DEF), WS_CHILD | WS_VISIBLE | SS_LEFT,
-		CRect(TEX_IG1600_X + 130, TEX_IG1600_Y, TEX_IG1600_W + 200, TEX_IG1600_H), this);
-	m_Ig1600ID->SetFont(m_font);
-
-
-	/* Sensor ID */
-	CStatic* m_ImageSensorTextCtl = new CStatic();
-	m_ImageSensorTextCtl->Create(_T("Sensor ID :"), WS_CHILD | WS_VISIBLE | SS_LEFT,
-		CRect(TEX_IMGSEN_X, TEX_IMGSEN_Y, TEX_IMGSEN_W, TEX_IMGSEN_H), this);
-	m_ImageSensorTextCtl->SetFont(m_font);
-
-	m_ImageSensorID = new CStatic();
-	m_ImageSensorID->Create(_T(TEXT_DEF), WS_CHILD | WS_VISIBLE | SS_LEFT,
-		CRect(TEX_IMGSEN_X + 130, TEX_IMGSEN_Y, TEX_IMGSEN_W + 200, TEX_IMGSEN_H), this);
-	m_ImageSensorID->SetFont(m_font);
-
-	/* Light LED */
-	CStatic* m_LedTextCtl = new CStatic();
-	m_LedTextCtl->Create(_T("LLED :"), WS_CHILD | WS_VISIBLE | SS_LEFT,
-		CRect(TEX_LED_X, TEX_LED_Y, TEX_LED_W, TEX_LED_H), this);
-	m_LedTextCtl->SetFont(m_font);
-
-	m_LightLedCtl = new CStatic();
-	m_LightLedCtl->Create(_T(TEXT_DEF), WS_CHILD | WS_VISIBLE | SS_LEFT,
-		CRect(TEX_LED_X + 130, TEX_LED_Y, TEX_LED_W + 200, TEX_LED_H), this);
-	m_LightLedCtl->SetFont(m_font);
-
-	/* PreView LED */
-	CStatic* m_LightTextCtl = new CStatic();
-	m_LightTextCtl->Create(_T("PLED :"), WS_CHILD | WS_VISIBLE | SS_LEFT,
-		CRect(TEX_LIGHT_X, TEX_LIGHT_Y, TEX_LIGHT_W, TEX_LIGHT_H), this);
-	m_LightTextCtl->SetFont(m_font);
-
-	m_PreLedCtl = new CStatic();
-	m_PreLedCtl->Create(_T(TEXT_DEF), WS_CHILD | WS_VISIBLE | SS_LEFT,
-		CRect(TEX_LIGHT_X + 130, TEX_LIGHT_Y, TEX_LIGHT_W + 200, TEX_LIGHT_H), this);
-	m_PreLedCtl->SetFont(m_font);
-
-	/* AF Btn */
-	CStatic* m_AfBtnTextCtl = new CStatic();
-	m_AfBtnTextCtl->Create(_T("AF Btn :"), WS_CHILD | WS_VISIBLE | SS_LEFT,
-		CRect(BTN_AF_X, BTN_AF_Y, BTN_AF_W, BTN_AF_H), this);
-	m_AfBtnTextCtl->SetFont(m_font);
-	m_AfBtn = new CStatic();
-	m_AfBtn->Create(_T(TEXT_DEF), WS_CHILD | WS_VISIBLE | SS_LEFT,
-		CRect(BTN_AF_X + 150, BTN_AF_Y, BTN_AF_W + 200, BTN_AF_H), this);
-	m_AfBtn->SetFont(m_font);
-
-
-	CStatic* m_LightBtnTextCtl = new CStatic();
-	m_LightBtnTextCtl->Create(_T("Light Btn :"), WS_CHILD | WS_VISIBLE | SS_LEFT,
-		CRect(BTN_LIGHT_X, BTN_LIGHT_Y, BTN_LIGHT_W, BTN_LIGHT_H), this);
-	m_LightBtnTextCtl->SetFont(m_font);
-	m_LedBtn = new CStatic();
-	m_LedBtn->Create(_T(TEXT_DEF), WS_CHILD | WS_VISIBLE | SS_LEFT,
-		CRect(BTN_LIGHT_X + 150, BTN_LIGHT_Y, BTN_LIGHT_W + 200, BTN_LIGHT_H), this);
-	m_LedBtn->SetFont(m_font);
+//	CStatic* m_LightBtnTextCtl = new CStatic();
+//	m_LightBtnTextCtl->Create(_T("Light Btn :"), WS_CHILD | WS_VISIBLE | SS_LEFT,
+//		CRect(BTN_LIGHT_X, BTN_LIGHT_Y, BTN_LIGHT_W, BTN_LIGHT_H), this);
+//	m_LightBtnTextCtl->SetFont(m_font);
+//	m_LedBtn = new CStatic();
+//	m_LedBtn->Create(_T(TEXT_DEF), WS_CHILD | WS_VISIBLE | SS_LEFT,
+//		CRect(BTN_LIGHT_X + 150, BTN_LIGHT_Y, BTN_LIGHT_W + 200, BTN_LIGHT_H), this);
+//	m_LedBtn->SetFont(m_font);
 
 	//video device list
 	DeviceEnumerator dec_emu;
@@ -432,7 +495,7 @@ void CKUVCDlg::OnSetVideoFullWnd()
 	::ShowWindow(hParent, SW_HIDE);
 
 	CWnd *pWnd = this->GetDlgItem(IDC_STATIC_VIDEO_FULL);
-	pWnd->MoveWindow(0, 0, 3840, 2160);
+	pWnd->MoveWindow(0, 0, VIDEO_FULL_W, VIDEO_FULL_H);
 	m_pFullWndCtrls.Add(pWnd);
 }
 
@@ -455,7 +518,7 @@ void CKUVCDlg::OnSetVideoScaleWnd()
 	::ShowWindow(hParent, SW_HIDE);
 
 	CWnd *pWnd = this->GetDlgItem(IDC_STATIC_VIDEO_SCALE);
-	pWnd->MoveWindow(0, TAB_H_GAP, 640, 480);
+	pWnd->MoveWindow(0, TAB_H_GAP, UVC_VIDEO_SCALE_W, UVC_VIDEO_SCALE_H);
 	m_pFullWndCtrls.Add(pWnd);
 }
 
@@ -675,11 +738,27 @@ DWORD WINAPI CKUVCDlg::CaptureVideoThread(LPVOID lpVoid)
 {
 	bool bShowSubWnd = false;
 	Mat inFrame;
+	Mat inFrameGary;
+	Mat inFrameLap;
 	Mat *ScaleFrame;
+	Mat inFrameCrop[ROI_NUM];
+	COpencvLaplacian *Laplacian;
 	char file_name[128];
 	int iCount = 0, device_num;
 	CvRect full_scale_rect;
 	CKUVCDlg* pThis = (CKUVCDlg*)lpVoid;
+	double blur_det_sd[ROI_NUM];
+	char blur_value[ROI_NUM][20], *blur_value_tmp;
+	int roi_full_pos_x[ROI_NUM] = {ROI1_FULL_X, ROI2_FULL_X, ROI3_FULL_X, ROI4_FULL_X, ROI5_FULL_X};
+	int roi_full_pos_y[ROI_NUM] = {ROI1_FULL_Y, ROI2_FULL_Y, ROI3_FULL_Y, ROI4_FULL_Y, ROI5_FULL_Y};
+	int roi_full_tex_pos_x[ROI_NUM] = {ROI1_FULL_TEX_POS_X, ROI2_FULL_TEX_POS_X, ROI3_FULL_TEX_POS_X, ROI4_FULL_TEX_POS_X, ROI5_FULL_TEX_POS_X};
+	int roi_full_tex_pos_y[ROI_NUM] = {ROI1_FULL_TEX_POS_Y, ROI2_FULL_TEX_POS_Y, ROI3_FULL_TEX_POS_Y, ROI4_FULL_TEX_POS_Y, ROI5_FULL_TEX_POS_Y};
+	int roi_full_rec_pos_x[ROI_NUM] = {ROI1_FULL_X, ROI2_FULL_X, ROI3_FULL_X, ROI4_FULL_X, ROI5_FULL_X};
+	int roi_full_rec_pos_y[ROI_NUM] = {ROI1_FULL_Y, ROI2_FULL_Y, ROI3_FULL_Y, ROI4_FULL_Y, ROI5_FULL_Y};
+	int roi_scale_tex_pos_x[ROI_NUM] = {ROI1_SCALE_TEX_POS_X, ROI2_SCALE_TEX_POS_X, ROI3_SCALE_TEX_POS_X, ROI4_SCALE_TEX_POS_X, ROI5_SCALE_TEX_POS_X};
+	int roi_scale_tex_pos_y[ROI_NUM] = {ROI1_SCALE_TEX_POS_Y, ROI2_SCALE_TEX_POS_Y, ROI3_SCALE_TEX_POS_Y, ROI4_SCALE_TEX_POS_Y, ROI5_SCALE_TEX_POS_Y};
+	int roi_scale_rec_pos_x[ROI_NUM] = {ROI1_SCALE_X, ROI2_SCALE_X, ROI3_SCALE_X, ROI4_SCALE_X, ROI5_SCALE_X};
+	int roi_scale_rec_pos_y[ROI_NUM] = {ROI1_SCALE_Y, ROI2_SCALE_Y, ROI3_SCALE_Y, ROI4_SCALE_Y, ROI5_SCALE_Y};
 
 	CButton *m_ctlCheck = (CButton*)pThis->GetDlgItem(IDC_CHECK_DS);
 	if (m_ctlCheck->GetCheck() == BST_CHECKED) {
@@ -695,16 +774,18 @@ DWORD WINAPI CKUVCDlg::CaptureVideoThread(LPVOID lpVoid)
 		return 0;
 	}
 
-	double w = cap.get(CV_CAP_PROP_FRAME_WIDTH);
-	double h = cap.get(CV_CAP_PROP_FRAME_HEIGHT);
 
 	pThis->LockUIs(TRUE);
 	memset(file_name, 0x00, sizeof(file_name));
 	//cap.set(cv::CAP_PROP_EXPOSURE, 0);
 	//cap.set(cv::CAP_PROP_BRIGHTNESS, -56);
-	cap.set(cv::CAP_PROP_SETTINGS, 1);
+	//cap.set(cv::CAP_PROP_SETTINGS, 1);
+	//cap.set(CV_CAP_PROP_FRAME_WIDTH, 1920);
+	//cap.set(CV_CAP_PROP_FRAME_HEIGHT, 1080);
 	cap.set(cv::CAP_OPENCV_MJPEG, 1);
-	
+
+	Laplacian = new COpencvLaplacian();
+
 	while (cap.read(inFrame)) {
 		if (pThis->m_bStopCpature == TRUE)
 			break;
@@ -716,20 +797,51 @@ DWORD WINAPI CKUVCDlg::CaptureVideoThread(LPVOID lpVoid)
 		else
 			iCount = 0;
 
+//		int w = cap.get(CV_CAP_PROP_FRAME_WIDTH);
+//		int h = cap.get(CV_CAP_PROP_FRAME_HEIGHT);
+//		CString str_wh;
+//		str_wh.Format(_T("W=%d H=%d"), w, h);
+//		AfxMessageBox(str_wh);
+
 //		CWnd *FullModeWnd = NULL;
 //		CWnd *ScaleModeWnd = NULL;
 //		FullModeWnd = (CWnd*)pThis->m_pFullWndCtrls[0];
 //		ScaleModeWnd = (CWnd*)pThis->m_pFullWndCtrls[1];
 
+		for (int i = 0; i < ROI_NUM; i++) {
+			inFrameCrop[i] = inFrame(Rect(roi_full_pos_x[i], roi_full_pos_y[i], ROI_FULL_W, ROI_FULL_H));
+			blur_det_sd[i] = Laplacian->Blur_Detect(inFrameCrop[i]);
+			blur_value_tmp = &blur_value[i][0];
+			sprintf(blur_value_tmp, "%f", (blur_det_sd[i] * blur_det_sd[i]) / 10);
+		}
+
 		if (pThis->m_bFullImageMode) {
+			for (int i = 0 ; i < ROI_NUM; i++) {
+				blur_value_tmp = &blur_value[i][0];
+				putText(inFrame, blur_value_tmp, Point(roi_full_tex_pos_x[i] , roi_full_tex_pos_y[i]), 0, 1, Scalar(0, 255, 0), 2);
+
+				/* ROI rectangle in full frame */
+				cv::rectangle(inFrame, Rect(roi_full_rec_pos_x[i], roi_full_rec_pos_y[i], ROI_FULL_W, ROI_FULL_H),  Scalar( 0, 255, 255 ), 1, LINE_8, 0);
+			}
 			cv::imshow(VIDEO_FULL_WND_NAME, inFrame);
 		} else {
 			ScaleFrame = &pThis->m_MatFullScaleFrame;
 			pThis->VideoScale(&inFrame, ScaleFrame,
 				UVC_VIDEO_SCALE_W, UVC_VIDEO_SCALE_H);
+
+			for (int i = 0 ; i < ROI_NUM; i++) {
+				blur_value_tmp = &blur_value[i][0];
+				putText(*ScaleFrame, blur_value_tmp, Point(roi_scale_tex_pos_x[i] , roi_scale_tex_pos_y[i]), 0, 1, Scalar(0, 255, 0), 2);
+
+				/* ROI rectangle in full frame */
+				cv::rectangle(*ScaleFrame, Rect(roi_scale_rec_pos_x[i], roi_scale_rec_pos_y[i], ROI_SCALE_W, ROI_SCALE_H),  Scalar( 0, 255, 255 ), 1, LINE_8, 0);
+			}
 			cv::imshow(VIDEO_SCALE_WND_NAME, *ScaleFrame);
 		}
 	}
+
+	if (Laplacian)
+		delete Laplacian;
 
 	cap.release();
 	pThis->ReleaseCaptureEvent();

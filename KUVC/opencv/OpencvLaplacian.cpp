@@ -15,7 +15,7 @@ RNG rng(12345);
  * @function main
  */
 
-double COpencvLaplacian::Laplacian(Mat img)
+double COpencvLaplacian::Blur_Detect(Mat img)
 {
 	cv::Mat gray, laplacian;
 	cv::Mat mean, dev;
@@ -26,7 +26,7 @@ double COpencvLaplacian::Laplacian(Mat img)
 	// laplacian
 	cv::Laplacian(gray, laplacian, CV_64F);
 
-	// mean and deviation, 計算矩陣的均值和標準差
+	// mean and deviation
 	cv::meanStdDev(laplacian, mean, dev);
 
 	return dev.at<double>(0, 0);
@@ -99,6 +99,7 @@ int COpencvLaplacian::LosdfindContour(Mat img, vector<Point2f> &center)
 	else
 		return 0;	
 }
+
 
 int COpencvLaplacian::findchart(Mat img, vector<Point2f> &center)
 {

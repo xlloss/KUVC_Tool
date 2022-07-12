@@ -22,7 +22,7 @@ protected:
     ///void PrepareSlices();
 
 public:
-	double COpencvLaplacian::Laplacian(Mat img);
+	double COpencvLaplacian::Blur_Detect(Mat img);
 	int COpencvLaplacian::LosdfindContour(Mat img, vector<Point2f> &center);
 	int COpencvLaplacian::findchart(Mat img, vector<Point2f> &center);
 	int COpencvLaplacian::findContractAndBrightness(Mat img, int Shift, int x, int y, int limit);
