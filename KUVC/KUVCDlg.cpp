@@ -146,6 +146,33 @@ using std::vector;
 #define ROI5_SCALE_TEX_POS_X (ROI_SCALE_CX + ROI5_SCALE_X)
 #define ROI5_SCALE_TEX_POS_Y (ROI_SCALE_CY + ROI5_SCALE_Y)
 
+	/* Test Button */
+	#define TEST_BTN_GP_X 0
+	#define TEST_BTN_GP_Y 600
+	#define TEST_BTN_GP_W 1900
+	#define TEST_BTN_GP_H 420
+
+
+	#define TEST_BTN_X(n) (TEST_BTN_GP_X + 10 + 200 * n)
+	#define TEST_BTN_Y(n) (TEST_BTN_GP_Y + 100)
+	#define TEST_BTN_W(n) (TEST_BTN_X(n) + 200)
+	#define TEST_BTN_H(n) (TEST_BTN_Y(n) + 50)
+	#define BTN_ROW(n) (n)
+	#define BTN_COL(n) (n)
+	#define TEST_BTN_ID 5000
+
+	#define TEST_BTN0 "Light"
+	#define TEST_BTN1 "TEST1"
+	#define TEST_BTN2 "TEST2"
+	#define TEST_BTN3 "TEST3"
+	#define TEST_BTN4 "TEST4"
+	#define TEST_BTN5 "TEST5"
+	#define TEST_BTN6 "TEST6"
+	#define TEST_BTN7 "TEST7"
+
+	char TestBtnNameRow0[BTN_ROW(8)][20] = { TEST_BTN0, TEST_BTN1, TEST_BTN2, TEST_BTN3,
+											 TEST_BTN4, TEST_BTN5, TEST_BTN6, TEST_BTN7};
+
 // global variable
 const char* strVideoFullWndName = "VIDEO FULL";
 cv::Point VertexOne, VertexThree;
@@ -156,6 +183,8 @@ CKUVCDlg::CKUVCDlg(CWnd* pParent /*=NULL*/)
 {
 	m_hIcon = AfxGetApp()->LoadIcon(IDR_MAINFRAME);
 	m_iSavePic = AfxGetApp()->GetProfileInt(_T("Setting"), _T("SavePic"), 1);
+
+	m_TestBtnRow0.Append(_T(TEST_BTN0));
 }
 
 CKUVCDlg::~CKUVCDlg()
@@ -181,6 +210,7 @@ BEGIN_MESSAGE_MAP(CKUVCDlg, CDialogEx)
 	ON_WM_HSCROLL()
 	ON_WM_CLOSE()
 	ON_BN_CLICKED(IDC_BUTTON_XU, &CKUVCDlg::OnClickedButtonXu)
+	ON_BN_CLICKED(IDC_TEST_BUTTON0, &CKUVCDlg::OnClickedBtn_Test0)
 END_MESSAGE_MAP()
 
 void CKUVCDlg::Init()
@@ -225,6 +255,8 @@ void CKUVCDlg::RegisterDevNotification(HANDLE *hWind)
 	if (!gNotifyDevHandle)
 		AfxMessageBox(_T("Register USB Device Notification Fail"));
 }
+
+
 
 BOOL CKUVCDlg::OnInitDialog()
 {
@@ -273,12 +305,12 @@ BOOL CKUVCDlg::OnInitDialog()
 //	//xu test button
 //	GetDlgItem(IDC_BUTTON_XU)->SetWindowPos(NULL, 0, 600, 100, 30, SWP_NOZORDER);
 //
-//	CFont* m_font = new CFont();
-//
-//	m_font->CreatePointFont(200, L" ");
+	CFont* m_font = new CFont();
+
+	m_font->CreatePointFont(200, L" ");
 //	GetDlgItem(IDC_CHECK_DS)->SetWindowPos(NULL, DIRECTSHOW_CKB_X, DIRECTSHOW_CKB_Y, 
 //	DIRECTSHOW_CKB_W, DIRECTSHOW_CKB_H, SWP_NOZORDER);
-//
+
 //	/* IG ID */
 //	CStatic* m_Ig1600TextCtl = new CStatic();
 //	m_Ig1600TextCtl->Create(_T("IG1600 ID :"), WS_CHILD | WS_VISIBLE | SS_LEFT,
@@ -343,6 +375,38 @@ BOOL CKUVCDlg::OnInitDialog()
 //	m_LedBtn->Create(_T(TEXT_DEF), WS_CHILD | WS_VISIBLE | SS_LEFT,
 //		CRect(BTN_LIGHT_X + 150, BTN_LIGHT_Y, BTN_LIGHT_W + 200, BTN_LIGHT_H), this);
 //	m_LedBtn->SetFont(m_font);
+
+	/* Test Button */
+	GetDlgItem(IDC_STATIC_TEST_BTN_GP)->SetWindowPos(NULL, TEST_BTN_GP_X, TEST_BTN_GP_Y, TEST_BTN_GP_W, TEST_BTN_GP_H, SWP_NOZORDER);
+	CString strtmp;
+	char *char_tmp;
+	for (int i = 0; i < BTN_ROW(8); i++) {
+		CA2T str_tmp(&TestBtnNameRow0[i][0]);
+
+		m_TestBtn[i] = new CButton;
+		m_TestBtn[i]->Create(str_tmp, WS_CHILD | WS_VISIBLE | SS_LEFT,
+			CRect(TEST_BTN_X(i) + 100, TEST_BTN_Y(i), TEST_BTN_W(i), TEST_BTN_H(i)),
+			this, TEST_BTN_ID + i);
+		m_TestBtn[i]->SetFont(m_font);
+		m_TestBtn[i]->ShowWindow(SW_SHOW);
+
+		strtmp.Format(_T("TEST%d"), i + BTN_COL(8) * BTN_ROW(1));
+		m_TestBtn[i + BTN_ROW(8)] = new CButton;
+		m_TestBtn[i + BTN_ROW(8)]->Create(strtmp, WS_CHILD | WS_VISIBLE | SS_LEFT,
+			CRect(TEST_BTN_X(i) + 100, TEST_BTN_Y(i) + 100 * BTN_ROW(1), TEST_BTN_W(i), TEST_BTN_H(i) + 100 * BTN_ROW(1)),
+			this, TEST_BTN_ID + 8 + i);
+		m_TestBtn[i + BTN_ROW(8)]->SetFont(m_font);
+		m_TestBtn[i + BTN_ROW(8)]->ShowWindow(SW_SHOW);
+
+		strtmp.Format(_T("TEST%d"), i + BTN_COL(8) * BTN_ROW(2));
+		m_TestBtn[i + BTN_ROW(8) * 2] = new CButton;
+		m_TestBtn[i + BTN_ROW(8) * 2]->Create(strtmp, WS_CHILD | WS_VISIBLE | SS_LEFT,
+			CRect(TEST_BTN_X(i) + 100, TEST_BTN_Y(i) + 100 * BTN_ROW(2), TEST_BTN_W(i), TEST_BTN_H(i) + 100 * BTN_ROW(2)),
+			this, TEST_BTN_ID + 16 + i);
+		m_TestBtn[i + BTN_ROW(8) * 2]->SetFont(m_font);
+		m_TestBtn[i + BTN_ROW(8) * 2]->ShowWindow(SW_SHOW);
+	}
+
 
 	//video device list
 	DeviceEnumerator dec_emu;
@@ -1080,6 +1144,34 @@ void CKUVCDlg::OnClose()
 }
 
 
+void CKUVCDlg::OnClickedBtn_Test0()
+{
+	#define XU_LIGHT_LED_CMD 0x03
+
+	BYTE read_data[4] = {0x00};
+	BYTE write_data[5];
+	unsigned int datalen;
+
+	UvcCtl = new Uvc();
+	UvcCtl->Set_DevName(TEST_CAM_NAME);
+	UvcCtl->Uvc_Init();
+
+	static const GUID UVC_xuGuid =
+	{ 0x0FB885C3, 0x68C2, 0x4547, {0x90, 0xF7, 0x8F, 0x47, 0x57, 0x9D, 0x95, 0xFC }};
+
+	/* Light LED Ctrl */
+	datalen = 1;
+	write_data[0] = 0;
+	UvcCtl->WriteXu(UVC_xuGuid, XU_LIGHT_LED_CMD, write_data, datalen);
+	//m_LightLedCtl->SetWindowTextW(_T("LED ON"));
+	Sleep(1000);
+	write_data[0] = 1;
+	UvcCtl->WriteXu(UVC_xuGuid, XU_LIGHT_LED_CMD, write_data, datalen);
+	//m_LightLedCtl->SetWindowTextW(_T("LED OFF"));
+
+	delete UvcCtl;
+}
+
 void CKUVCDlg::OnClickedButtonXu()
 {
 	//AfxMessageBox(_T("XuTest"));
@@ -1087,7 +1179,7 @@ void CKUVCDlg::OnClickedButtonXu()
 	UvcCtl = new Uvc();
 	UvcCtl->Set_DevName(TEST_CAM_NAME);
 	UvcCtl->Uvc_Init();
-	
+
 	static const GUID UVC_xuGuid =
 	{ 0x0FB885C3, 0x68C2, 0x4547, {0x90, 0xF7, 0x8F, 0x47, 0x57, 0x9D, 0x95, 0xFC }};
 

@@ -77,6 +77,7 @@
 #define BTN_LIGHT_H BTN_LIGHT_Y + 40
 
 
+
 using namespace cv;
 using namespace std;
 
@@ -119,6 +120,8 @@ protected:
 	CPtrArray m_pFullWndCtrls;
 	CTabCtrl m_TabCtrl;
 
+	CString m_TestBtnRow0;
+
 	void VideoScale(Mat *SrcFrame, Mat *DstFrame, int width, int high);
 	void RegisterDevNotification(HANDLE *hWind);
 	void ShowVideoFullWnd(BOOL Enable);
@@ -127,8 +130,8 @@ protected:
 	static CKUVCDlg* s_pThis;
 	static DWORD WINAPI CaptureVideoThread(LPVOID lpVoid);
 
-	CButton *m_TestBtn[6];
-	RECT m_TestBtnRect[6];
+	CButton *m_TestBtn[24];
+	RECT m_TestBtnRect[10];
 
 	CStatic* m_ImageSensorID;
 	CStatic* m_Ig1600ID;
@@ -177,4 +180,5 @@ public:
 	friend void onMouseFullWnd(int Event, int x, int y, int flags, void* param);
 	afx_msg void OnClose();
 	afx_msg void OnClickedButtonXu();
+	afx_msg void OnClickedBtn_Test0();
 };
